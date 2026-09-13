@@ -1,4 +1,4 @@
-import "./server.js";
+import "./server.mjs";
 import { httpServerHandler } from "cloudflare:node";
 
 const expressHandler = httpServerHandler({ port: 3000 });
