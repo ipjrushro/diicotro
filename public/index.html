@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIICOT | Rush România</title>
+
+<style>
+*{box-sizing:border-box}
+:root{
+    --bg:#02050a;
+    --bg2:#07101a;
+    --panel:rgba(9,17,28,.78);
+    --panel2:rgba(12,24,38,.92);
+    --line:rgba(255,255,255,.075);
+    --gold:#e3b341;
+    --gold2:#ffd76a;
+    --gold3:#8e5a05;
+    --text:#f5f7fb;
+    --muted:#91a2b8;
+    --muted2:#617188;
+    --green:#35d88a;
+    --red:#ff4557;
+    --shadow:0 34px 90px rgba(0,0,0,.48);
+}
+html{scroll-behavior:smooth}
+body{
+    margin:0;
+    min-height:100vh;
+    color:var(--text);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:
+        radial-gradient(circle at 18% 14%,rgba(31,61,98,.18),transparent 28%),
+        radial-gradient(circle at 85% 8%,rgba(227,179,65,.10),transparent 25%),
+        linear-gradient(180deg,#02050a 0%,#06101a 48%,#02060b 100%);
+    overflow-x:hidden;
+}
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:-2;
+    background:
+        linear-gradient(rgba(255,255,255,.014) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.014) 1px,transparent 1px);
+    background-size:52px 52px;
+    mask-image:linear-gradient(to bottom,#000 0 72%,transparent 100%);
+}
+body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:-1;
+    background:radial-gradient(circle at center,transparent 35%,rgba(0,0,0,.5) 100%);
+}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit}
+::selection{background:rgba(227,179,65,.32)}
+
+/* NAV */
+.nav-shell{
+    position:sticky;top:0;z-index:100;
+    border-bottom:1px solid rgba(255,255,255,.055);
+    background:rgba(2,6,11,.80);
+    backdrop-filter:blur(24px);
+}
+.navbar{
+    width:min(1540px,calc(100% - 42px));
+    height:86px;margin:auto;
+    display:flex;align-items:center;gap:24px;
+}
+.brand{
+    display:flex;align-items:center;gap:12px;min-width:270px;
+}
+.brand-emblem{
+    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
+    border:1px solid rgba(227,179,65,.28);
+    background:linear-gradient(145deg,rgba(227,179,65,.15),rgba(5,10,16,.9));
+    box-shadow:inset 0 0 28px rgba(227,179,65,.04),0 14px 34px rgba(0,0,0,.28);
+}
+.brand-emblem img{width:44px;height:44px;object-fit:contain}
+.brand-copy strong{display:block;font-size:21px;letter-spacing:2.2px}
+.brand-copy span{display:block;margin-top:4px;color:var(--gold);font-size:7px;font-weight:950;letter-spacing:2px}
+.nav-center{
+    flex:1;display:flex;justify-content:center;
+}
+.nav-links{
+    display:flex;gap:5px;padding:5px;
+    border:1px solid rgba(255,255,255,.055);
+    border-radius:14px;background:rgba(255,255,255,.018);
+}
+.nav-links a{
+    min-height:42px;display:flex;align-items:center;justify-content:center;
+    padding:0 16px;border-radius:10px;color:#94a4b9;
+    font-size:8px;font-weight:900;letter-spacing:.55px;transition:.18s ease;
+}
+.nav-links a:hover,.nav-links a.active{color:#fff;background:rgba(255,255,255,.04)}
+.nav-links a.active{box-shadow:inset 0 -2px 0 var(--gold)}
+#auth-area{min-width:265px;display:flex;justify-content:flex-end}
+.login-btn,.logout-btn{
+    min-height:42px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 15px;border-radius:10px;
+    border:1px solid rgba(227,179,65,.30);
+    background:rgba(227,179,65,.05);color:var(--gold2);
+    font-size:7px;font-weight:950;letter-spacing:.7px;transition:.18s ease;
+}
+.login-btn:hover,.logout-btn:hover{transform:translateY(-1px);background:rgba(227,179,65,.10)}
+.user-menu{
+    display:flex;align-items:center;gap:10px;padding:6px 7px;
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;background:rgba(255,255,255,.025);
+}
+.user-avatar{width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(227,179,65,.5)}
+.user-info{min-width:128px}
+.user-info strong{display:block;font-size:9px}
+.user-info span{display:block;margin-top:3px;color:var(--gold);font-size:6px;font-weight:950}
+.user-menu .logout-btn{min-height:34px;padding:0 10px;color:#aeb9c8;border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+
+/* HERO */
+.hero{
+    width:min(1540px,calc(100% - 42px));
+    margin:0 auto;
+    min-height:calc(100vh - 86px);
+    padding:58px 0 44px;
+    position:relative;
+}
+.hero-stage{
+    min-height:680px;
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,.065);
+    border-radius:28px;
+    background:
+        radial-gradient(circle at 75% 25%,rgba(227,179,65,.10),transparent 25%),
+        linear-gradient(130deg,rgba(7,15,24,.98) 0%,rgba(8,18,30,.98) 45%,rgba(3,8,14,.98) 100%);
+    box-shadow:var(--shadow);
+}
+.hero-stage::before{
+    content:"";
+    position:absolute;inset:0;
+    background:
+        linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px),
+        linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px);
+    background-size:54px 54px;
+    opacity:.65;
+}
+.hero-stage::after{
+    content:"DIICOT";
+    position:absolute;
+    right:-2%;
+    top:7%;
+    font-size:clamp(120px,15vw,260px);
+    font-weight:1000;
+    letter-spacing:18px;
+    color:rgba(255,255,255,.018);
+    transform:rotate(-4deg);
+}
+.hero-grid{
+    position:relative;z-index:3;
+    min-height:680px;
+    display:grid;
+    grid-template-columns:minmax(0,.9fr) minmax(560px,1.1fr);
+    align-items:center;
+    gap:46px;
+    padding:66px 62px;
+}
+.hero-copy{max-width:650px}
+.eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    color:var(--gold2);font-size:7px;font-weight:950;letter-spacing:1.9px;
+}
+.eyebrow::before{content:"";width:34px;height:2px;background:linear-gradient(90deg,var(--gold2),var(--gold3))}
+.hero h1{
+    margin:24px 0 0;
+    font-size:clamp(82px,8.2vw,142px);
+    line-height:.78;
+    letter-spacing:-7px;
+}
+.hero h1 .line1{display:block;color:#f4f6f8}
+.hero h1 .line2{
+    display:block;margin-top:22px;color:transparent;
+    background:linear-gradient(180deg,#ffe286 0%,#ffc737 36%,#c47e06 100%);
+    -webkit-background-clip:text;background-clip:text;
+    text-shadow:0 20px 55px rgba(210,146,20,.07);
+}
+.hero-sub{
+    max-width:610px;margin-top:26px;
+    color:#95a7bb;font-size:14px;line-height:1.8;
+}
+.hero-actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:31px}
+.primary-btn,.secondary-btn{
+    min-height:54px;display:inline-flex;align-items:center;justify-content:center;gap:11px;
+    padding:0 21px;border-radius:11px;font-size:8px;font-weight:1000;letter-spacing:.85px;
+    transition:.18s ease;
+}
+.primary-btn{
+    min-width:220px;color:#14100a;border:1px solid #f4cc5a;
+    background:linear-gradient(135deg,#ffdd6e,#dfa61d);
+    box-shadow:0 17px 42px rgba(217,157,25,.20),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.secondary-btn{
+    min-width:180px;color:#d9e3ef;border:1px solid rgba(135,159,190,.24);
+    background:rgba(8,18,30,.56);
+}
+.primary-btn:hover,.secondary-btn:hover{transform:translateY(-2px)}
+.primary-btn::after,.secondary-btn::after{content:"→";font-size:14px}
+
+/* HERO RIGHT "COMMAND DECK" */
+.command-deck{
+    min-height:560px;position:relative;
+    display:flex;align-items:center;justify-content:center;
+}
+.deck-frame{
+    width:100%;max-width:650px;aspect-ratio:1.12;
+    position:relative;border-radius:26px;overflow:hidden;
+    border:1px solid rgba(227,179,65,.17);
+    background:
+        radial-gradient(circle at center,rgba(227,179,65,.08) 0 22%,transparent 23%),
+        radial-gradient(circle at center,transparent 0 34%,rgba(227,179,65,.07) 35% 35.3%,transparent 35.5%),
+        radial-gradient(circle at center,transparent 0 48%,rgba(227,179,65,.055) 49% 49.3%,transparent 49.5%),
+        linear-gradient(145deg,#091726,#06101b 72%);
+    box-shadow:inset 0 0 80px rgba(0,0,0,.45),0 30px 60px rgba(0,0,0,.28);
+}
+.deck-frame::before{
+    content:"";
+    position:absolute;inset:0;
+    background:
+        linear-gradient(90deg,transparent 49.9%,rgba(227,179,65,.09) 50%,transparent 50.1%),
+        linear-gradient(transparent 49.9%,rgba(227,179,65,.09) 50%,transparent 50.1%);
+}
+.scan{
+    position:absolute;inset:50% auto auto 50%;
+    width:38%;height:1px;transform-origin:left center;
+    background:linear-gradient(90deg,rgba(255,215,106,.7),transparent);
+    box-shadow:0 0 15px rgba(255,215,106,.35);
+    animation:scan 11s linear infinite;
+}
+@keyframes scan{to{transform:rotate(360deg)}}
+.core-shield{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:250px;height:300px;
+    clip-path:polygon(50% 0,91% 16%,86% 72%,50% 100%,14% 72%,9% 16%);
+    background:linear-gradient(165deg,rgba(227,179,65,.13),rgba(2,7,12,.97) 38%,#010407 100%);
+    filter:drop-shadow(0 26px 40px rgba(0,0,0,.52));
+}
+.core-shield::before{
+    content:"";position:absolute;inset:3px;clip-path:inherit;border:1px solid rgba(227,179,65,.62)
+}
+.core-content{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.core-content img{width:122px;height:122px;object-fit:contain;filter:drop-shadow(0 0 22px rgba(227,179,65,.14))}
+.core-content strong{display:block;margin-top:-44px;font-size:25px;letter-spacing:4px}
+.core-content span{display:block;margin-top:-82px;color:var(--gold);font-size:7px;font-weight:950;letter-spacing:2px}
+.float-card{
+    position:absolute;z-index:5;min-width:180px;padding:14px 15px;
+    border:1px solid rgba(255,255,255,.075);border-radius:12px;
+    background:rgba(4,11,19,.84);backdrop-filter:blur(15px);
+    box-shadow:0 20px 44px rgba(0,0,0,.34);
+}
+.float-card.top{left:20px;top:22px}
+.float-card.bottom{right:20px;bottom:22px}
+.float-card span{display:block;color:#5f7185;font-size:6px;font-weight:900;letter-spacing:.7px}
+.float-card strong{display:block;margin-top:6px;font-size:11px}
+.float-card em{display:inline-flex;align-items:center;gap:6px;margin-top:7px;color:var(--green);font-style:normal;font-size:7px}
+.float-card em::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 9px rgba(53,216,138,.7)}
+.orbit-dot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--gold2);box-shadow:0 0 14px rgba(255,215,106,.85)}
+.orbit-dot.one{right:12%;top:28%}
+.orbit-dot.two{left:15%;bottom:24%}
+
+/* TRUST BAR */
+.trustbar{
+    margin-top:18px;
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
+}
+.trust{
+    min-height:84px;display:flex;align-items:center;gap:12px;padding:14px 15px;
+    border:1px solid rgba(255,255,255,.06);border-radius:13px;
+    background:rgba(255,255,255,.018);
+}
+.trust i{
+    width:38px;height:38px;display:grid;place-items:center;flex:0 0 38px;
+    border:1px solid rgba(227,179,65,.22);border-radius:10px;
+    color:var(--gold);background:rgba(227,179,65,.04);font-style:normal
+}
+.trust strong{display:block;font-size:7px;letter-spacing:.45px}
+.trust span{display:block;margin-top:4px;color:#617287;font-size:7px}
+
+/* METRICS */
+.metrics-wrap{width:min(1540px,calc(100% - 42px));margin:18px auto 0}
+.metrics{
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    overflow:hidden;border:1px solid rgba(227,179,65,.15);border-radius:16px;
+    background:linear-gradient(145deg,rgba(8,17,28,.96),rgba(5,12,20,.97));
+    box-shadow:0 24px 65px rgba(0,0,0,.30);
+}
+.metric{min-height:124px;display:flex;align-items:center;gap:15px;position:relative;padding:22px 25px}
+.metric:not(:last-child)::after{content:"";position:absolute;right:0;top:25%;width:1px;height:50%;background:rgba(255,255,255,.055)}
+.metric-icon{
+    width:52px;height:52px;display:grid;place-items:center;flex:0 0 52px;
+    border:1px solid rgba(227,179,65,.22);border-radius:12px;color:var(--gold);background:rgba(227,179,65,.04);font-size:20px
+}
+.metric strong{display:block;font-size:25px}
+.metric b{display:block;margin-top:5px;color:var(--gold);font-size:7px;letter-spacing:.75px}
+.metric span{display:block;margin-top:5px;color:#637489;font-size:8px}
+
+/* FEATURES */
+.section{width:min(1540px,calc(100% - 42px));margin:84px auto 0}
+.section-heading{display:flex;align-items:end;justify-content:space-between;gap:35px;margin-bottom:22px}
+.section-heading span{display:block;color:var(--gold);font-size:8px;font-weight:950;letter-spacing:1.4px}
+.section-heading h2{margin:8px 0 0;font-size:38px;letter-spacing:-1px}
+.section-heading p{max-width:520px;margin:0;color:#718398;font-size:11px;line-height:1.75}
+.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.feature-card{
+    min-height:360px;position:relative;overflow:hidden;padding:26px;
+    border:1px solid rgba(255,255,255,.065);border-radius:16px;
+    background:
+        linear-gradient(180deg,rgba(5,11,18,.18),rgba(5,11,18,.92)),
+        radial-gradient(circle at 75% 15%,rgba(227,179,65,.09),transparent 26%),
+        linear-gradient(145deg,#0b1726,#07101a 72%);
+    transition:.2s ease;
+}
+.feature-card:hover{transform:translateY(-5px);border-color:rgba(227,179,65,.23);box-shadow:0 24px 56px rgba(0,0,0,.26)}
+.feature-card::before{
+    content:attr(data-num);position:absolute;right:18px;top:7px;
+    font-size:98px;font-weight:1000;color:rgba(255,255,255,.025);letter-spacing:-5px
+}
+.feature-icon{
+    width:50px;height:50px;display:grid;place-items:center;
+    border:1px solid rgba(227,179,65,.24);border-radius:12px;color:var(--gold);background:rgba(227,179,65,.04);font-size:19px
+}
+.feature-card h3{margin:52px 0 12px;font-size:22px}
+.feature-card p{max-width:370px;margin:0;color:#7b8ca0;font-size:10px;line-height:1.85}
+.feature-link{display:inline-flex;align-items:center;gap:8px;margin-top:34px;color:var(--gold);font-size:7px;font-weight:950;letter-spacing:.7px}
+
+/* SECURITY */
+.security-strip{
+    margin-top:14px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+    overflow:hidden;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(7,15,25,.78)
+}
+.security-item{min-height:112px;display:flex;align-items:center;gap:13px;position:relative;padding:19px 21px}
+.security-item:not(:last-child)::after{content:"";position:absolute;right:0;top:23%;width:1px;height:54%;background:rgba(255,255,255,.055)}
+.security-icon{
+    width:44px;height:44px;display:grid;place-items:center;flex:0 0 44px;
+    border:1px solid rgba(227,179,65,.21);border-radius:10px;color:var(--gold);background:rgba(227,179,65,.035);font-size:17px
+}
+.security-item strong{display:block;font-size:8px}
+.security-item span{display:block;margin-top:4px;color:#65778c;font-size:7px;line-height:1.5}
+
+/* CTA */
+.cta{
+    width:min(1540px,calc(100% - 42px));margin:74px auto 82px;position:relative;overflow:hidden;
+    min-height:230px;padding:38px 40px;display:flex;align-items:center;justify-content:space-between;gap:30px;
+    border:1px solid rgba(227,179,65,.17);border-radius:18px;
+    background:
+        radial-gradient(circle at 86% 42%,rgba(227,179,65,.13),transparent 28%),
+        linear-gradient(145deg,rgba(12,24,39,.95),rgba(6,13,22,.97));
+    box-shadow:var(--shadow)
+}
+.cta::before{content:"DIICOT";position:absolute;right:3%;top:50%;transform:translateY(-50%);font-size:120px;font-weight:1000;letter-spacing:9px;color:rgba(255,255,255,.022)}
+.cta-copy{position:relative;z-index:2}
+.cta-copy span{color:var(--gold);font-size:7px;font-weight:950;letter-spacing:1.3px}
+.cta-copy h3{margin:8px 0 9px;font-size:31px}
+.cta-copy p{margin:0;color:#77899d;font-size:10px}
+.cta .primary-btn{position:relative;z-index:2}
+
+/* FOOTER */
+footer{border-top:1px solid rgba(255,255,255,.055);background:rgba(4,9,15,.84)}
+.footer-inner{
+    width:min(1540px,calc(100% - 42px));min-height:150px;margin:auto;
+    display:grid;grid-template-columns:1.2fr .8fr .8fr 1fr;gap:30px;align-items:center
+}
+.footer-brand{display:flex;align-items:center;gap:13px}
+.footer-brand img{width:58px;height:58px;object-fit:contain}
+.footer-brand strong{display:block;font-size:16px;letter-spacing:1.5px}
+.footer-brand span{display:block;margin-top:3px;color:var(--gold);font-size:7px;font-weight:900;letter-spacing:1.6px}
+.footer-col strong{display:block;margin-bottom:8px;color:#cfd8e4;font-size:8px}
+.footer-col a,.footer-col span{display:block;margin-top:6px;color:#63758a;font-size:8px}
+.footer-col a:hover{color:var(--gold)}
+.footer-status{display:inline-flex!important;align-items:center;gap:6px;color:var(--green)!important}
+.footer-status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 9px rgba(53,216,138,.55)}
+.footer-bottom{
+    width:min(1540px,calc(100% - 42px));min-height:54px;margin:auto;
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    border-top:1px solid rgba(255,255,255,.045);color:#495a6d;font-size:7px;letter-spacing:.65px
+}
+
+/* RESPONSIVE */
+@media(max-width:1180px){
+    .nav-links{display:none}
+    .hero-grid{grid-template-columns:1fr}
+    .command-deck{min-height:520px}
+    .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .metric:nth-child(2)::after{display:none}
+    .feature-grid{grid-template-columns:1fr 1fr}
+    .security-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .security-item:nth-child(2)::after{display:none}
+    .footer-inner{grid-template-columns:1fr 1fr;padding:30px 0}
+}
+@media(max-width:760px){
+    .navbar,.hero,.metrics-wrap,.section,.cta,.footer-inner,.footer-bottom{width:min(100% - 28px,1540px)}
+    .navbar{height:74px}
+    .brand{min-width:0;flex:1}
+    .brand-copy strong{font-size:16px}
+    #auth-area{min-width:0}
+    .user-info,.user-menu .logout-btn{display:none}
+    .hero{min-height:auto;padding:30px 0 34px}
+    .hero-stage{border-radius:18px}
+    .hero-grid{min-height:auto;padding:44px 24px}
+    .hero h1{font-size:clamp(64px,20vw,100px);letter-spacing:-4px}
+    .hero-sub{font-size:13px}
+    .command-deck{min-height:390px}
+    .deck-frame{max-width:430px}
+    .core-shield{width:180px;height:220px}
+    .core-content img{width:90px;height:90px}
+    .core-content strong{font-size:19px}
+    .float-card{display:none}
+    .trustbar{grid-template-columns:1fr}
+    .metrics{grid-template-columns:1fr}
+    .metric::after{display:none}
+    .metric{min-height:108px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .section-heading{align-items:flex-start;flex-direction:column}
+    .feature-grid{grid-template-columns:1fr}
+    .security-strip{grid-template-columns:1fr}
+    .security-item::after{display:none}
+    .cta{align-items:flex-start;flex-direction:column}
+    .cta::before{font-size:72px}
+    .footer-inner{grid-template-columns:1fr}
+    .footer-bottom{flex-direction:column;align-items:flex-start;justify-content:center;padding:14px 0}
+}
+@media(prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+
+/* ===== PREMIUM FEATURE CARDS V4 ===== */
+.section#features{
+    margin-top:88px;
+}
+#features .section-heading{
+    align-items:flex-end;
+    margin-bottom:28px;
+}
+#features .section-heading h2{
+    max-width:880px;
+    font-size:42px;
+    line-height:1.05;
+    letter-spacing:-1.7px;
+}
+#features .section-heading p{
+    max-width:500px;
+    font-size:11px;
+    color:#7f92aa;
+}
+
+#features .feature-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:18px;
+}
+
+#features .feature-card{
+    min-height:430px;
+    position:relative;
+    overflow:hidden;
+    padding:0;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:22px;
+    background:
+        radial-gradient(circle at 72% 12%,rgba(227,179,65,.12),transparent 28%),
+        linear-gradient(180deg,rgba(12,23,37,.98),rgba(4,10,18,.98));
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025),
+        0 20px 55px rgba(0,0,0,.18);
+    transition:
+        transform .25s ease,
+        border-color .25s ease,
+        box-shadow .25s ease;
+}
+
+#features .feature-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+        linear-gradient(130deg,rgba(255,255,255,.018),transparent 32%),
+        linear-gradient(180deg,transparent 45%,rgba(0,0,0,.28) 100%);
+    pointer-events:none;
+}
+
+#features .feature-card::after{
+    content:attr(data-num);
+    position:absolute;
+    right:22px;
+    top:18px;
+    color:rgba(255,255,255,.035);
+    font-size:118px;
+    line-height:.8;
+    font-weight:1000;
+    letter-spacing:-8px;
+    pointer-events:none;
+}
+
+#features .feature-card:hover{
+    transform:translateY(-7px);
+    border-color:rgba(227,179,65,.28);
+    box-shadow:
+        0 30px 72px rgba(0,0,0,.34),
+        0 0 0 1px rgba(227,179,65,.03),
+        inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+#features .feature-card .feature-icon{
+    position:absolute;
+    top:28px;
+    left:28px;
+    width:62px;
+    height:62px;
+    border-radius:16px;
+    border:1px solid rgba(227,179,65,.32);
+    background:
+        linear-gradient(145deg,rgba(227,179,65,.11),rgba(227,179,65,.025));
+    color:#f1c95d;
+    font-size:24px;
+    box-shadow:
+        inset 0 0 24px rgba(227,179,65,.05),
+        0 16px 34px rgba(0,0,0,.22);
+}
+
+#features .feature-card h3{
+    margin:0;
+    position:absolute;
+    left:28px;
+    right:28px;
+    top:132px;
+    font-size:26px;
+    letter-spacing:-.5px;
+}
+
+#features .feature-card p{
+    position:absolute;
+    left:28px;
+    right:28px;
+    top:180px;
+    max-width:420px;
+    color:#8fa2ba;
+    font-size:11px;
+    line-height:1.8;
+}
+
+#features .feature-card .feature-link{
+    position:absolute;
+    left:28px;
+    right:28px;
+    bottom:26px;
+    min-height:52px;
+    margin:0;
+    padding:0 16px;
+    border-radius:12px;
+    border:1px solid rgba(227,179,65,.20);
+    background:rgba(227,179,65,.045);
+    color:#f2c95c;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:8px;
+    font-weight:1000;
+    letter-spacing:.85px;
+    transition:.2s ease;
+}
+
+#features .feature-card .feature-link::after{
+    content:"↗";
+    font-size:14px;
+    color:#ffd96d;
+    transition:transform .2s ease;
+}
+
+#features .feature-card:hover .feature-link{
+    background:rgba(227,179,65,.09);
+    border-color:rgba(227,179,65,.34);
+}
+
+#features .feature-card:hover .feature-link::after{
+    transform:translate(2px,-2px);
+}
+
+#features .feature-card:nth-child(1){
+    background:
+        radial-gradient(circle at 78% 13%,rgba(221,172,55,.13),transparent 30%),
+        linear-gradient(160deg,#0b1826 0%,#07111d 58%,#040a12 100%);
+}
+#features .feature-card:nth-child(2){
+    background:
+        radial-gradient(circle at 76% 14%,rgba(61,103,158,.16),transparent 30%),
+        linear-gradient(160deg,#0b1725 0%,#07111d 58%,#040a12 100%);
+}
+#features .feature-card:nth-child(3){
+    background:
+        radial-gradient(circle at 78% 14%,rgba(227,179,65,.10),transparent 30%),
+        linear-gradient(160deg,#0c1724 0%,#07111d 58%,#040a12 100%);
+}
+
+#features .feature-card .feature-icon::after{
+    content:"";
+    position:absolute;
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    border:1px solid rgba(227,179,65,.05);
+}
+
+@media(max-width:1180px){
+    #features .feature-grid{
+        grid-template-columns:1fr 1fr;
+    }
+}
+@media(max-width:760px){
+    #features .section-heading h2{
+        font-size:31px;
+    }
+    #features .feature-grid{
+        grid-template-columns:1fr;
+    }
+    #features .feature-card{
+        min-height:390px;
+    }
+}
+
+
+/* ======================================================
+   CINEMATIC DIICOT FEATURE CARDS V5
+   ====================================================== */
+#features .cinematic-feature-grid{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:16px !important;
+}
+
+#features .cinematic-card{
+    position:relative !important;
+    min-height:420px !important;
+    overflow:hidden !important;
+    padding:0 !important;
+    border-radius:18px !important;
+    border:1px solid rgba(227,179,65,.24) !important;
+    background-color:#07111b !important;
+    background-size:cover !important;
+    background-position:center !important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.015),
+        0 18px 50px rgba(0,0,0,.26) !important;
+    isolation:isolate;
+    transition:transform .24s ease,border-color .24s ease,box-shadow .24s ease !important;
+}
+
+#features .cinematic-card.card-rapoarte{
+    background-image:url('/uploads/card-rapoarte-hd.jpg') !important;
+}
+#features .cinematic-card.card-personal{
+    background-image:url('/uploads/card-personal-hd.jpg') !important;
+}
+#features .cinematic-card.card-admin{
+    background-image:url('/uploads/card-admin-hd.jpg') !important;
+}
+#features .cinematic-card.card-cod{
+    background-image:url('/uploads/card-cod-penal-hd.jpg') !important;
+}
+
+#features .cinematic-card::before,
+#features .cinematic-card::after{
+    display:none !important;
+}
+
+#features .cinematic-overlay{
+    position:absolute;
+    inset:0;
+    z-index:0;
+    background:
+        linear-gradient(180deg,rgba(3,8,14,.05) 0%,rgba(3,8,14,.16) 35%,rgba(3,8,14,.82) 72%,rgba(3,8,14,.98) 100%),
+        linear-gradient(90deg,rgba(4,10,17,.14),rgba(4,10,17,.04));
+}
+
+#features .cinematic-card .feature-icon{
+    position:absolute !important;
+    z-index:2 !important;
+    top:18px !important;
+    left:18px !important;
+    width:54px !important;
+    height:54px !important;
+    border-radius:14px !important;
+    display:grid !important;
+    place-items:center !important;
+    border:1px solid rgba(227,179,65,.42) !important;
+    background:rgba(7,15,25,.72) !important;
+    backdrop-filter:blur(10px);
+    color:#f1c95d !important;
+    font-size:21px !important;
+    box-shadow:0 14px 28px rgba(0,0,0,.28) !important;
+}
+
+#features .cinematic-arrow{
+    position:absolute;
+    z-index:2;
+    top:20px;
+    right:20px;
+    color:#e9bd52;
+    font-size:17px;
+    opacity:.86;
+    transition:transform .22s ease;
+}
+
+#features .cinematic-copy{
+    position:absolute;
+    z-index:2;
+    left:22px;
+    right:22px;
+    bottom:20px;
+}
+
+#features .cinematic-kicker{
+    display:inline-block;
+    margin-bottom:8px;
+    color:#e4b849;
+    font-size:7px;
+    font-weight:950;
+    letter-spacing:1.45px;
+}
+
+#features .cinematic-card h3{
+    position:static !important;
+    margin:0 0 9px !important;
+    font-size:24px !important;
+    line-height:1.08 !important;
+    letter-spacing:-.55px !important;
+    color:#fff !important;
+    text-shadow:0 4px 18px rgba(0,0,0,.72);
+}
+
+#features .cinematic-card p{
+    position:static !important;
+    margin:0 !important;
+    max-width:100% !important;
+    color:#b0bfd1 !important;
+    font-size:10px !important;
+    line-height:1.65 !important;
+    text-shadow:0 2px 12px rgba(0,0,0,.8);
+}
+
+#features .cinematic-card .feature-link{
+    position:static !important;
+    width:max-content !important;
+    min-height:auto !important;
+    margin:17px 0 0 !important;
+    padding:0 0 6px !important;
+    border:0 !important;
+    border-bottom:1px solid rgba(227,179,65,.28) !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:10px !important;
+    color:#efc45a !important;
+    font-size:8px !important;
+    font-weight:1000 !important;
+    letter-spacing:.9px !important;
+}
+
+#features .cinematic-card .feature-link::after{
+    content:"→" !important;
+    font-size:14px !important;
+    color:#efc45a !important;
+}
+
+#features .cinematic-card:hover{
+    transform:translateY(-7px) scale(1.008) !important;
+    border-color:rgba(227,179,65,.52) !important;
+    box-shadow:
+        0 28px 72px rgba(0,0,0,.42),
+        0 0 0 1px rgba(227,179,65,.04),
+        0 0 34px rgba(227,179,65,.08) !important;
+}
+
+#features .cinematic-card:hover .cinematic-arrow{
+    transform:translate(3px,-3px);
+}
+
+#features .cinematic-card:hover .cinematic-overlay{
+    background:
+        linear-gradient(180deg,rgba(3,8,14,.02) 0%,rgba(3,8,14,.11) 35%,rgba(3,8,14,.74) 72%,rgba(3,8,14,.97) 100%);
+}
+
+@media(max-width:1280px){
+    #features .cinematic-feature-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    }
+}
+@media(max-width:700px){
+    #features .cinematic-feature-grid{
+        grid-template-columns:1fr !important;
+    }
+    #features .cinematic-card{
+        min-height:390px !important;
+    }
+}
+
+
+/* ===== CARD BACKGROUNDS HD V6 ===== */
+#features .cinematic-card{
+    background-position:center 32% !important;
+    background-size:cover !important;
+}
+#features .cinematic-card.card-rapoarte{background-position:center 34% !important;}
+#features .cinematic-card.card-personal{background-position:center 30% !important;}
+#features .cinematic-card.card-admin{background-position:center 28% !important;}
+#features .cinematic-card.card-cod{background-position:center 30% !important;}
+
+#features .cinematic-overlay{
+    background:
+        linear-gradient(180deg,
+            rgba(2,7,12,.02) 0%,
+            rgba(2,7,12,.05) 36%,
+            rgba(2,7,12,.46) 60%,
+            rgba(2,7,12,.92) 80%,
+            rgba(2,7,12,.985) 100%) !important;
+}
+#features .cinematic-card:hover .cinematic-overlay{
+    background:
+        linear-gradient(180deg,
+            rgba(2,7,12,0) 0%,
+            rgba(2,7,12,.03) 35%,
+            rgba(2,7,12,.40) 59%,
+            rgba(2,7,12,.89) 79%,
+            rgba(2,7,12,.98) 100%) !important;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="nav-shell">
+<header class="navbar">
+    <a href="/" class="brand">
+        <div class="brand-emblem">
+            <img src="/uploads/diicot-logo.png" alt="DIICOT">
+        </div>
+        <div class="brand-copy">
+            <strong>DIICOT</strong>
+            <span>RUSH ROMÂNIA</span>
+        </div>
+    </a>
+
+    <div class="nav-center">
+        <nav class="nav-links">
+            <a href="/" class="active">ACASĂ</a>
+            <a href="/dashboard">CENTRU DE COMANDĂ</a>
+            <a href="#features">FUNCȚIONALITĂȚI</a>
+            <a href="#security">SECURITATE</a>
+            <a href="#about">DESPRE HUB</a>
+        </nav>
+    </div>
+
+    <div id="auth-area">
+        <a href="/auth/discord" class="login-btn">AUTENTIFICARE DISCORD</a>
+    </div>
+</header>
+</div>
+
+<main class="hero">
+    <section class="hero-stage">
+        <div class="hero-grid">
+
+            <div class="hero-copy">
+                <div class="eyebrow">DIRECȚIA DE INVESTIGARE A INFRACȚIUNILOR</div>
+
+                <h1>
+                    <span class="line1">CENTRU</span>
+                    <span class="line2">DIICOT</span>
+                </h1>
+
+                <p class="hero-sub">
+                    Platformă internă securizată pentru gestionarea activității,
+                    rapoartelor, personalului și instrumentelor operaționale DIICOT.
+                </p>
+
+                <div class="hero-actions">
+                    <a href="/auth/discord" class="primary-btn" id="main-login-btn">
+                        INTRĂ ÎN CONT
+                    </a>
+                    <a href="#features" class="secondary-btn">
+                        DESCOPERĂ SISTEMUL
+                    </a>
+                </div>
+
+                <div class="trustbar">
+                    <div class="trust">
+                        <i>◇</i>
+                        <div>
+                            <strong>ACCES SECURIZAT</strong>
+                            <span>Autentificare Discord</span>
+                        </div>
+                    </div>
+                    <div class="trust">
+                        <i>◎</i>
+                        <div>
+                            <strong>CONTROL CENTRALIZAT</strong>
+                            <span>Instrumente integrate</span>
+                        </div>
+                    </div>
+                    <div class="trust">
+                        <i>♙</i>
+                        <div>
+                            <strong>STRUCTURĂ UNITĂ</strong>
+                            <span>Personal și grade</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="command-deck" aria-hidden="true">
+                <div class="deck-frame">
+                    <div class="scan"></div>
+                    <span class="orbit-dot one"></span>
+                    <span class="orbit-dot two"></span>
+
+                    <div class="float-card top">
+                        <span>SISTEM INTERN</span>
+                        <strong>Centru operațional</strong>
+                        <em>ONLINE</em>
+                    </div>
+
+                    <div class="float-card bottom">
+                        <span>ACCES</span>
+                        <strong>Autorizare pe grade</strong>
+                        <em>SECURIZAT</em>
+                    </div>
+
+                    <div class="core-shield">
+                        <div class="core-content">
+                            <img src="/uploads/diicot-logo.png" alt="">
+                            <strong>DIICOT</strong>
+                            <span>RUSH ROMÂNIA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</main>
+
+<section class="metrics-wrap">
+<div class="metrics">
+
+    <article class="metric">
+        <div class="metric-icon">♙</div>
+        <div>
+            <strong>58</strong>
+            <b>MEMBRI ÎNREGISTRAȚI</b>
+            <span>Structura DIICOT</span>
+        </div>
+    </article>
+
+    <article class="metric">
+        <div class="metric-icon">▤</div>
+        <div>
+            <strong>RAPOARTE</strong>
+            <b>GESTIONARE CENTRALIZATĂ</b>
+            <span>Activitate operațională</span>
+        </div>
+    </article>
+
+    <article class="metric">
+        <div class="metric-icon">§</div>
+        <div>
+            <strong>COD PENAL</strong>
+            <b>LEGISLAȚIE INTERNĂ</b>
+            <span>Acces rapid la articole</span>
+        </div>
+    </article>
+
+    <article class="metric">
+        <div class="metric-icon">◇</div>
+        <div>
+            <strong>100%</strong>
+            <b>ACCES CONTROLAT</b>
+            <span>Permisiuni pe grade</span>
+        </div>
+    </article>
+
+</div>
+</section>
+
+<section class="section" id="features">
+
+    <div class="section-heading">
+        <div>
+            <span>SISTEME & FUNCȚIONALITĂȚI</span>
+            <h2>Tot centrul DIICOT, într-o singură platformă</h2>
+        </div>
+        <p>
+            Aceleași funcții existente, reorganizate într-o interfață mai clară,
+            mai modernă și mai apropiată de un centru operațional premium.
+        </p>
+    </div>
+
+    
+    <div class="feature-grid cinematic-feature-grid">
+
+        <article class="feature-card cinematic-card card-rapoarte">
+            <div class="cinematic-overlay"></div>
+            <div class="feature-icon">▤</div>
+            <div class="cinematic-arrow">↗</div>
+            <div class="cinematic-copy">
+                <span class="cinematic-kicker">ACTIVITATE</span>
+                <h3>RAPOARTE</h3>
+                <p>Postează, urmărește și gestionează rapoarte de activitate cu suport pentru imagini și istoric complet.</p>
+                <a href="/dashboard?section=my-reports" class="feature-link">ACCESEAZĂ</a>
+            </div>
+        </article>
+
+        <article class="feature-card cinematic-card card-personal">
+            <div class="cinematic-overlay"></div>
+            <div class="feature-icon">♙</div>
+            <div class="cinematic-arrow">↗</div>
+            <div class="cinematic-copy">
+                <span class="cinematic-kicker">STRUCTURĂ</span>
+                <h3>PERSONAL DIICOT</h3>
+                <p>Vizualizează membrii structurii, gradele, profilurile, callsign-urile și datele operaționale disponibile.</p>
+                <a href="/dashboard?section=personnel" class="feature-link">ACCESEAZĂ</a>
+            </div>
+        </article>
+
+        <article class="feature-card cinematic-card card-admin">
+            <div class="cinematic-overlay"></div>
+            <div class="feature-icon">⚙</div>
+            <div class="cinematic-arrow">↗</div>
+            <div class="cinematic-copy">
+                <span class="cinematic-kicker">CONDUCERE</span>
+                <h3>ADMINISTRARE</h3>
+                <p>Instrumente pentru conducere, blacklist, concedii, învoiri, anunțuri și controlul structurii interne.</p>
+                <a href="/dashboard?section=admin" class="feature-link">ACCESEAZĂ</a>
+            </div>
+        </article>
+
+        <article class="feature-card cinematic-card card-cod">
+            <div class="cinematic-overlay"></div>
+            <div class="feature-icon">§</div>
+            <div class="cinematic-arrow">↗</div>
+            <div class="cinematic-copy">
+                <span class="cinematic-kicker">LEGISLAȚIE</span>
+                <h3>COD PENAL</h3>
+                <p>Accesează legislația penală și instrumentele juridice disponibile în centrul operațional.</p>
+                <a href="/dashboard?section=penal-code" class="feature-link">ACCESEAZĂ</a>
+            </div>
+        </article>
+
+    </div>
+
+
+    <div class="security-strip" id="security">
+
+        <div class="security-item">
+            <div class="security-icon">◇</div>
+            <div>
+                <strong>ACCES SECURIZAT</strong>
+                <span>Autentificare prin Discord și sesiuni protejate.</span>
+            </div>
+        </div>
+
+        <div class="security-item">
+            <div class="security-icon">◎</div>
+            <div>
+                <strong>CONTROL CENTRALIZAT</strong>
+                <span>Instrumente interne într-o singură interfață.</span>
+            </div>
+        </div>
+
+        <div class="security-item">
+            <div class="security-icon">◷</div>
+            <div>
+                <strong>ACTIVITATE ÎN TIMP REAL</strong>
+                <span>Date actualizate și acces rapid la informații.</span>
+            </div>
+        </div>
+
+        <div class="security-item">
+            <div class="security-icon">▣</div>
+            <div>
+                <strong>DATE PROTEJATE</strong>
+                <span>Permisiuni diferențiate în funcție de grad.</span>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="cta" id="about">
+    <div class="cta-copy">
+        <span>CENTRU OPERAȚIONAL</span>
+        <h3>Accesează sistemul intern DIICOT</h3>
+        <p>
+            Rapoarte, personal, legislație și administrare într-o singură platformă.
+        </p>
+    </div>
+
+    <a href="/auth/discord" class="primary-btn" id="bottom-login-btn">
+        INTRĂ ÎN CONT
+    </a>
+</section>
+
+<footer>
+    <div class="footer-inner">
+
+        <div class="footer-brand">
+            <img src="/uploads/diicot-logo.png" alt="DIICOT">
+            <div>
+                <strong>DIICOT</strong>
+                <span>RUSH ROMÂNIA</span>
+            </div>
+        </div>
+
+        <div class="footer-col">
+            <strong>LINK-URI RAPIDE</strong>
+            <a href="/dashboard">Centru de Comandă</a>
+            <a href="/dashboard?section=my-reports">Rapoarte</a>
+            <a href="/dashboard?section=personnel">Personal</a>
+        </div>
+
+        <div class="footer-col">
+            <strong>SISTEM</strong>
+            <span>Acces pe bază de grade</span>
+            <span>Sistem intern securizat</span>
+            <span>Integrare Discord</span>
+        </div>
+
+        <div class="footer-col">
+            <strong>STARE SERVICIU</strong>
+            <span class="footer-status">Sistem operațional</span>
+            <span>Rush România</span>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        <span>© 2026 DIICOT • RUSH ROMÂNIA</span>
+        <span>SISTEM INTERN • ACCES RESTRICȚIONAT</span>
+    </div>
+</footer>
+
+<script>
+
+    function escapeHTML(value) {
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            String(value ?? "");
+
+        return div.innerHTML;
+    }
+
+
+    function getDiscordAvatar(user) {
+
+        if (
+            user &&
+            user.id &&
+            user.avatar
+        ) {
+
+            return (
+                `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
+            );
+        }
+
+        return (
+            "https://cdn.discordapp.com/embed/avatars/0.png"
+        );
+    }
+
+
+    function showLoggedOut() {
+
+        const authArea =
+            document.getElementById(
+                "auth-area"
+            );
+
+        const mainLoginBtn =
+            document.getElementById(
+                "main-login-btn"
+            );
+
+        const bottomLoginBtn =
+            document.getElementById(
+                "bottom-login-btn"
+            );
+
+
+        if (authArea) {
+
+            authArea.innerHTML = `
+
+                <a
+                    href="/auth/discord"
+                    class="login-btn"
+                >
+                    AUTENTIFICARE DISCORD
+                </a>
+
+            `;
+        }
+
+
+        [
+            mainLoginBtn,
+            bottomLoginBtn
+        ].forEach(
+            button => {
+
+                if (!button) {
+                    return;
+                }
+
+                button.textContent =
+                    "INTRĂ ÎN CONT";
+
+                button.href =
+                    "/auth/discord";
+            }
+        );
+    }
+
+
+    function showLoggedIn(user) {
+
+        const authArea =
+            document.getElementById(
+                "auth-area"
+            );
+
+        const mainLoginBtn =
+            document.getElementById(
+                "main-login-btn"
+            );
+
+        const bottomLoginBtn =
+            document.getElementById(
+                "bottom-login-btn"
+            );
+
+
+        const displayName =
+            user.displayName ||
+            user.globalName ||
+            user.username ||
+            "Utilizator";
+
+
+        const rank =
+            user.rank ||
+            "MEMBRU DIICOT";
+
+
+        const avatarURL =
+            getDiscordAvatar(user);
+
+
+        if (authArea) {
+
+            authArea.innerHTML = `
+
+                <div class="user-menu">
+
+                    <img
+                        src="${avatarURL}"
+                        class="user-avatar"
+                        alt="Avatar Discord"
+                    >
+
+                    <div class="user-info">
+
+                        <strong>
+                            ${escapeHTML(displayName)}
+                        </strong>
+
+                        <span>
+                            ${escapeHTML(rank)}
+                        </span>
+
+                    </div>
+
+                    <a
+                        href="/logout"
+                        class="logout-btn"
+                    >
+                        DECONECTARE
+                    </a>
+
+                </div>
+
+            `;
+        }
+
+
+        [
+            mainLoginBtn,
+            bottomLoginBtn
+        ].forEach(
+            button => {
+
+                if (!button) {
+                    return;
+                }
+
+                button.textContent =
+                    "CENTRU DE COMANDĂ";
+
+                button.href =
+                    "/dashboard";
+            }
+        );
+    }
+
+
+    async function verificaAutentificarea() {
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/me",
+                    {
+                        method:
+                            "GET",
+
+                        credentials:
+                            "include",
+
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                showLoggedOut();
+
+                return;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                !data.loggedIn ||
+                !data.user
+            ) {
+
+                showLoggedOut();
+
+                return;
+            }
+
+
+            showLoggedIn(
+                data.user
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Eroare verificare autentificare:",
+                error
+            );
+
+            showLoggedOut();
+        }
+    }
+
+
+    window.addEventListener(
+        "pageshow",
+        verificaAutentificarea
+    );
+
+
+    verificaAutentificarea();
+
+</script>
+
+</body>
+</html>
