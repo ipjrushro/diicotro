@@ -6,7 +6,6 @@ import crypto from "node:crypto";
 import multer from "multer";
 import compression from "compression";
 import dotenv from "dotenv";
-import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import {
     S3Client,
@@ -21,8 +20,10 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Cloudflare Workers bundles do not expose a filesystem URL through
+// import.meta.url. Static files are served by the ASSETS binding in worker.mjs;
+// this path is retained only for running the same server locally with Node.
+const __dirname = path.join(process.cwd(), "public");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
