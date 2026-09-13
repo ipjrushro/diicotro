@@ -9,4 +9,4 @@
 
 Botul nu are nevoie de Administrator pentru această versiune. Backend-ul folosește tokenul botului ca să verifice rolurile membrului pe server.
 
-Conducere configurată: Coordonator, Procuror, Procuror Șef Adjunct, Procuror Șef.
+Conducere configurată: Coordonator, Procuror, Procuror Șef Adjunct, Procuror Șef..
