@@ -17,8 +17,17 @@ import {
     DeleteObjectsCommand
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { env as cloudflareEnv } from "cloudflare:workers";
 
 dotenv.config();
+
+// Read dashboard Variables and Secrets directly from Cloudflare. The fallback
+// keeps the same file usable when it is started locally with Node and a .env.
+const runtimeEnv = new Proxy({}, {
+    get(_target, key) {
+        return cloudflareEnv?.[key] ?? process.env?.[key];
+    }
+});
 
 // Cloudflare Workers bundles do not expose a filesystem URL through
 // import.meta.url. Static files are served by the ASSETS binding in worker.mjs;
@@ -26,7 +35,7 @@ dotenv.config();
 const __dirname = path.join(process.cwd(), "public");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = runtimeEnv.PORT || 3000;
 
 // ======================================================
 // BANDWIDTH OPTIMIZATION
@@ -43,25 +52,25 @@ app.use(
 );
 
 
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
-const GUILD_ID = process.env.DISCORD_GUILD_ID;
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+const CLIENT_ID = runtimeEnv.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = runtimeEnv.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = runtimeEnv.DISCORD_REDIRECT_URI;
+const GUILD_ID = runtimeEnv.DISCORD_GUILD_ID;
+const BOT_TOKEN = runtimeEnv.DISCORD_BOT_TOKEN;
 
 const CALLSIGN_LOG_CHANNEL_ID = "1547395877503500318";
 const CALLSIGN_DASHBOARD_URL =
-    process.env.CALLSIGN_DASHBOARD_URL ||
+    runtimeEnv.CALLSIGN_DASHBOARD_URL ||
     "https://diicot-07hy.onrender.com/dashboard.html";
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const SUPABASE_URL = runtimeEnv.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = runtimeEnv.SUPABASE_SERVICE_KEY;
 
-const B2_BUCKET = process.env.B2_BUCKET;
-const B2_REGION = process.env.B2_REGION;
-const B2_ENDPOINT = process.env.B2_ENDPOINT;
-const B2_KEY_ID = process.env.B2_KEY_ID;
-const B2_APPLICATION_KEY = process.env.B2_APPLICATION_KEY;
+const B2_BUCKET = runtimeEnv.B2_BUCKET;
+const B2_REGION = runtimeEnv.B2_REGION;
+const B2_ENDPOINT = runtimeEnv.B2_ENDPOINT;
+const B2_KEY_ID = runtimeEnv.B2_KEY_ID;
+const B2_APPLICATION_KEY = runtimeEnv.B2_APPLICATION_KEY;
 
 const b2 = new S3Client({
     endpoint: B2_ENDPOINT,
@@ -92,7 +101,7 @@ if (
 // BACKBLAZE B2 CORS — DIRECT BROWSER UPLOAD
 // ======================================================
 const B2_DIRECT_UPLOAD_ORIGIN =
-    process.env.B2_DIRECT_UPLOAD_ORIGIN ||
+    runtimeEnv.B2_DIRECT_UPLOAD_ORIGIN ||
     "https://diicot-07hy.onrender.com";
 
 async function configureB2CorsForDirectUpload() {
@@ -1343,7 +1352,7 @@ app.use(
         name: "diicot_session",
 
         keys: [
-            process.env.SESSION_SECRET ||
+            runtimeEnv.SESSION_SECRET ||
             "change-this-secret"
         ],
 
@@ -4059,7 +4068,7 @@ const DIRECT_UPLOAD_ALLOWED_TYPES = new Set([
 
 function getDirectUploadTokenSecret() {
     return String(
-        process.env.SESSION_SECRET ||
+        runtimeEnv.SESSION_SECRET ||
         B2_APPLICATION_KEY ||
         "change-this-secret"
     );
