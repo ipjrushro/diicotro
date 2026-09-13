@@ -1,7 +1,25 @@
-import "./server.mjs";
 import { httpServerHandler } from "cloudflare:node";
 
-const expressHandler = httpServerHandler({ port: 3000 });
+let expressHandlerPromise;
+
+function getExpressHandler(env) {
+  if (!expressHandlerPromise) {
+    // Dashboard Variables and Secrets arrive on the fetch env binding. Copy
+    // only string bindings before importing server.mjs, whose configuration is
+    // initialized at module load time.
+    for (const [key, value] of Object.entries(env)) {
+      if (typeof value === "string") {
+        process.env[key] = value;
+      }
+    }
+
+    expressHandlerPromise = import("./server.mjs").then(() =>
+      httpServerHandler({ port: 3000 })
+    );
+  }
+
+  return expressHandlerPromise;
+}
 
 function assetRequest(request, pathname) {
   const url = new URL(request.url);
@@ -33,6 +51,7 @@ export default {
       return env.ASSETS.fetch(assetRequest(request, pathname));
     }
 
+    const expressHandler = await getExpressHandler(env);
     return expressHandler.fetch(request, env, ctx);
   }
 };
