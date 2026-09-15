@@ -3216,60 +3216,60 @@ app.get(
                         REDIRECT_URI
                 });
 
-            const tokenResponse =
-                await axios.post(
+            const tokenResponse = await fetch(
+                "https://discord.com/api/oauth2/token",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: params.toString()
+                }
+            );
 
-                    "https://discord.com/api/oauth2/token",
+            const tokenData = await tokenResponse.json();
 
-                    params.toString(),
-
-                    {
-                        headers: {
-
-                            "Content-Type":
-                                "application/x-www-form-urlencoded"
-                        }
-                    }
+            if (!tokenResponse.ok) {
+                throw new Error(
+                    `Discord token exchange failed (${tokenResponse.status}): ${JSON.stringify(tokenData)}`
                 );
+            }
 
-            const accessToken =
-                tokenResponse
-                    .data
-                    .access_token;
+            const accessToken = tokenData.access_token;
 
-            const userResponse =
-                await axios.get(
-
-                    "https://discord.com/api/users/@me",
-
-                    {
-                        headers: {
-
-                            Authorization:
-                                `Bearer ${accessToken}`
-                        }
+            const userResponse = await fetch(
+                "https://discord.com/api/users/@me",
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
                     }
+                }
+            );
+
+            const discordUser = await userResponse.json();
+
+            if (!userResponse.ok) {
+                throw new Error(
+                    `Discord user request failed (${userResponse.status}): ${JSON.stringify(discordUser)}`
                 );
+            }
 
-            const discordUser =
-                userResponse.data;
-
-            const memberResponse =
-                await axios.get(
-
-                    `https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`,
-
-                    {
-                        headers: {
-
-                            Authorization:
-                                `Bearer ${accessToken}`
-                        }
+            const memberResponse = await fetch(
+                `https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`
                     }
-                );
+                }
+            );
 
-            const member =
-                memberResponse.data;
+            const member = await memberResponse.json();
+
+            if (!memberResponse.ok) {
+                throw new Error(
+                    `Discord guild member request failed (${memberResponse.status}): ${JSON.stringify(member)}`
+                );
+            }
 
             const roles =
                 Array.isArray(
