@@ -1,5 +1,74 @@
 import express from "express";
-import axios from "axios";
+// Mic client HTTP compatibil cu Cloudflare Workers. Axios trimite implicit
+// `cache: "default"`, opțiune pe care runtime-ul Workers nu o acceptă.
+async function cloudflareHttp(method, inputUrl, body, config = {}) {
+    const url = new URL(inputUrl);
+
+    for (const [key, value] of Object.entries(config.params || {})) {
+        if (value !== undefined && value !== null && value !== "") {
+            url.searchParams.set(key, String(value));
+        }
+    }
+
+    const headers = new Headers(config.headers || {});
+    const init = { method, headers };
+
+    if (body !== undefined && body !== null && method !== "GET" && method !== "HEAD") {
+        if (
+            typeof body === "string" ||
+            body instanceof ArrayBuffer ||
+            ArrayBuffer.isView(body) ||
+            body instanceof Blob ||
+            body instanceof FormData ||
+            body instanceof URLSearchParams
+        ) {
+            init.body = body;
+        }
+        else {
+            if (!headers.has("Content-Type")) {
+                headers.set("Content-Type", "application/json");
+            }
+            init.body = JSON.stringify(body);
+        }
+    }
+
+    const response = await fetch(url.toString(), init);
+    const text = await response.text();
+    let data = null;
+
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        }
+        catch {
+            data = text;
+        }
+    }
+
+    const result = {
+        data,
+        status: response.status,
+        headers: response.headers
+    };
+
+    if (!response.ok) {
+        const error = new Error(
+            data?.message || `HTTP ${response.status}`
+        );
+        error.response = result;
+        throw error;
+    }
+
+    return result;
+}
+
+const axios = {
+    get: (url, config = {}) => cloudflareHttp("GET", url, undefined, config),
+    delete: (url, config = {}) => cloudflareHttp("DELETE", url, undefined, config),
+    post: (url, body, config = {}) => cloudflareHttp("POST", url, body, config),
+    put: (url, body, config = {}) => cloudflareHttp("PUT", url, body, config),
+    patch: (url, body, config = {}) => cloudflareHttp("PATCH", url, body, config)
+};
 import cookieSession from "cookie-session";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -52,7 +121,7 @@ const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const CALLSIGN_LOG_CHANNEL_ID = "1547395877503500318";
 const CALLSIGN_DASHBOARD_URL =
     process.env.CALLSIGN_DASHBOARD_URL ||
-    "https://diicot-07hy.onrender.com/dashboard.html";
+    "https://diicotro.rushdiicot6.workers.dev/dashboard.html";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -93,7 +162,7 @@ if (
 // ======================================================
 const B2_DIRECT_UPLOAD_ORIGIN =
     process.env.B2_DIRECT_UPLOAD_ORIGIN ||
-    "https://diicot-07hy.onrender.com";
+    "https://diicotro.rushdiicot6.workers.dev";
 
 async function configureB2CorsForDirectUpload() {
     if (
@@ -15008,72 +15077,3 @@ app.use(
                     });
             }
 
-
-            return res
-                .status(400)
-                .json({
-                    error:
-                        error.message
-                });
-        }
-
-
-        if (
-            error?.message ===
-            "Sunt acceptate doar imagini JPG, PNG și WEBP."
-        ) {
-
-            return res
-                .status(400)
-                .json({
-                    error:
-                        error.message
-                });
-        }
-
-
-        if (
-            res.headersSent
-        ) {
-
-            return next(
-                error
-            );
-        }
-
-
-        res
-            .status(500)
-            .json({
-                error:
-                    "A apărut o eroare internă pe server."
-            });
-    }
-);
-
-
-// ======================================================
-// START SERVER
-// ======================================================
-
-app.listen(
-    PORT,
-
-    () => {
-
-        console.log(
-            `DIICOT Command Center rulează pe portul ${PORT}`
-        );
-
-        console.log(
-            `Discord Guild: ${GUILD_ID || "NECONFIGURAT"}`
-        );
-
-        console.log(
-            `Supabase: ${SUPABASE_URL ? "CONFIGURAT" : "NECONFIGURAT"}`
-        );
-
-        // Nu executăm apeluri de rețea la inițializarea unui Worker.
-        // CORS pentru noul domeniu se configurează după primul deploy.
-    }
-);
