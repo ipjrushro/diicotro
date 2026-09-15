@@ -10602,6 +10602,80 @@ app.patch(
                 new Date()
                     .toISOString();
 
+            // Cloudflare are o limită de subrequest-uri per cerere. Salvăm
+            // toate rândurile într-un singur UPSERT, nu unul câte unul.
+            {
+                const ids = rows
+                    .map(item => String(item.id || "").trim())
+                    .filter(Boolean);
+
+                const { data: currentDocsRows, error: currentDocsError } =
+                    await supabase
+                        .from("docs_personnel")
+                        .select("*")
+                        .in("id", ids);
+
+                if (currentDocsError) throw currentDocsError;
+
+                const currentById = new Map(
+                    (currentDocsRows || []).map(row => [String(row.id), row])
+                );
+
+                const batchRows = rows
+                    .map(item => {
+                        const id = String(item.id || "").trim();
+                        const current = currentById.get(id);
+                        if (!id || !current) return null;
+
+                        return {
+                            ...current,
+                            full_name: String(item.fullName || "").trim().slice(0, 120),
+                            internal_id: String(item.internalId || "").trim().slice(0, 40),
+                            callsign: String(item.callsign || "").trim().slice(0, 20),
+                            active: Boolean(item.active),
+                            last_promotion: item.lastPromotion || null,
+                            joined_at: item.joinedAt || null,
+                            cert_ftp: Boolean(item.certFtp),
+                            cert_radio: Boolean(item.certRadio),
+                            cert_air: Boolean(item.certAir),
+                            cert_dcco: Boolean(item.certDcco),
+                            roles: String(item.roles || "").trim().slice(0, 160),
+                            discord: String(item.discord || "").trim().slice(0, 120),
+                            updated_at: now,
+                            updated_by_id: String(req.session.user.id),
+                            updated_by_name:
+                                req.session.user.displayName || req.session.user.username
+                        };
+                    })
+                    .filter(Boolean);
+
+                if (!batchRows.length) {
+                    return res.status(404).json({
+                        error: "Rândurile DOCS nu au fost găsite."
+                    });
+                }
+
+                const { error: batchSaveError } = await supabase
+                    .from("docs_personnel")
+                    .upsert(batchRows, { onConflict: "id" });
+
+                if (batchSaveError) throw batchSaveError;
+
+                const { data: savedDocsRows, error: savedDocsError } = await supabase
+                    .from("docs_personnel")
+                    .select("*")
+                    .order("position", { ascending: true })
+                    .order("rank_level", { ascending: false });
+
+                if (savedDocsError) throw savedDocsError;
+
+                return res.json({
+                    success: true,
+                    updated: batchRows.length,
+                    rows: (savedDocsRows || []).map(mapDocsRow)
+                });
+            }
+
             let updated =
                 0;
 
@@ -11169,6 +11243,155 @@ app.delete(
 // Nu suprascrie câmpurile editate manual.
 // ======================================================
 
+function docsSlotFromCallsign(value) {
+    const match = String(value || "")
+        .trim()
+        .toUpperCase()
+        .match(/^D-(\d{1,2})$/);
+
+    if (!match) return null;
+
+    const number = Number(match[1]);
+    if (number < 1 || number > 99) return null;
+
+    return {
+        number,
+        callsign: `D-${String(number).padStart(2, "0")}`
+    };
+}
+
+async function syncDocsInBatches(editorId, editorName) {
+    const now = new Date().toISOString();
+    const { data: existingData, error: existingError } = await supabase
+        .from("docs_personnel")
+        .select("*");
+
+    if (existingError) throw existingError;
+
+    const existingRows = existingData || [];
+    const rowsByCallsign = new Map();
+
+    for (const row of existingRows) {
+        const slot = docsSlotFromCallsign(row.callsign);
+        if (slot && !rowsByCallsign.has(slot.callsign)) {
+            rowsByCallsign.set(slot.callsign, row);
+        }
+    }
+
+    const members = await getGuildMembersCached();
+    const membersByCallsign = new Map();
+
+    for (const member of members) {
+        const roles = Array.isArray(member.roles)
+            ? member.roles.map(String)
+            : [];
+        if (!getHighestDIICOTRole(roles)) continue;
+
+        const displayName =
+            member.nick ||
+            member.user?.global_name ||
+            member.user?.username ||
+            "";
+        const match = displayName.match(/\[(D-\d{1,2})\]/i);
+        const slot = docsSlotFromCallsign(match?.[1]);
+
+        if (slot && member.user?.id) {
+            membersByCallsign.set(slot.callsign, member);
+        }
+    }
+
+    const duplicateIds = new Set();
+    const upsertRows = [];
+    let assigned = 0;
+
+    for (let number = 1; number <= 99; number += 1) {
+        const callsign = `D-${String(number).padStart(2, "0")}`;
+        const target = rowsByCallsign.get(callsign) || {};
+        const member = membersByCallsign.get(callsign) || null;
+        const discordId = member?.user?.id ? String(member.user.id) : null;
+        const oldDiscordRow = discordId
+            ? existingRows.find(row =>
+                String(row.discord_id || "") === discordId &&
+                row.id !== target.id
+            )
+            : null;
+
+        if (oldDiscordRow) duplicateIds.add(oldDiscordRow.id);
+
+        const manual = {
+            ...oldDiscordRow,
+            ...target,
+            internal_id: target.internal_id || oldDiscordRow?.internal_id || "",
+            last_promotion: target.last_promotion || oldDiscordRow?.last_promotion || null,
+            joined_at: target.joined_at || oldDiscordRow?.joined_at || null,
+            cert_ftp: Boolean(target.cert_ftp || oldDiscordRow?.cert_ftp),
+            cert_radio: Boolean(target.cert_radio || oldDiscordRow?.cert_radio),
+            cert_air: Boolean(target.cert_air || oldDiscordRow?.cert_air),
+            cert_dcco: Boolean(target.cert_dcco || oldDiscordRow?.cert_dcco),
+            roles: target.roles || oldDiscordRow?.roles || "",
+            notes: target.notes || oldDiscordRow?.notes || "",
+            penalty_points: Number(target.penalty_points || oldDiscordRow?.penalty_points || 0)
+        };
+        const rank = getDocsRankForSlot(number);
+        const displayName = member
+            ? (member.nick || member.user?.global_name || member.user?.username || "Membru DIICOT")
+            : "";
+
+        if (member) assigned += 1;
+
+        upsertRows.push({
+            id: target.id || crypto.randomUUID(),
+            discord_id: discordId,
+            rank: rank.name,
+            rank_level: rank.level,
+            full_name: member
+                ? removeExistingCallsign(displayName)
+                : (target.full_name || ""),
+            internal_id: manual.internal_id,
+            callsign,
+            active: Boolean(member),
+            last_promotion: manual.last_promotion,
+            joined_at: manual.joined_at,
+            cert_ftp: manual.cert_ftp,
+            cert_radio: manual.cert_radio,
+            cert_air: manual.cert_air,
+            cert_dcco: manual.cert_dcco,
+            roles: manual.roles,
+            notes: manual.notes,
+            penalty_points: manual.penalty_points,
+            discord: member?.user?.username
+                ? `@${member.user.username}`
+                : (target.discord || ""),
+            position: number,
+            created_at: target.created_at || now,
+            updated_at: now,
+            updated_by_id: editorId,
+            updated_by_name: editorName
+        });
+    }
+
+    if (duplicateIds.size) {
+        const { error: deleteError } = await supabase
+            .from("docs_personnel")
+            .delete()
+            .in("id", [...duplicateIds]);
+        if (deleteError) throw deleteError;
+    }
+
+    const { error: upsertError } = await supabase
+        .from("docs_personnel")
+        .upsert(upsertRows, { onConflict: "id" });
+    if (upsertError) throw upsertError;
+
+    return {
+        success: true,
+        created: upsertRows.filter(row => !existingRows.some(old => old.id === row.id)).length,
+        assigned,
+        merged: duplicateIds.size,
+        totalSlots: 99
+    };
+}
+
 app.post(
     "/api/admin/docs/sync",
 
@@ -11196,6 +11419,15 @@ app.post(
         }
 
         try {
+
+            // Varianta Cloudflare: câteva operații batch în loc de peste 100
+            // de cereri Supabase individuale.
+            return res.json(
+                await syncDocsInBatches(
+                    String(req.session.user.id),
+                    req.session.user.displayName || req.session.user.username
+                )
+            );
 
             const now =
                 new Date()
