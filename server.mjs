@@ -15077,3 +15077,72 @@ app.use(
                     });
             }
 
+
+            return res
+                .status(400)
+                .json({
+                    error:
+                        error.message
+                });
+        }
+
+
+        if (
+            error?.message ===
+            "Sunt acceptate doar imagini JPG, PNG și WEBP."
+        ) {
+
+            return res
+                .status(400)
+                .json({
+                    error:
+                        error.message
+                });
+        }
+
+
+        if (
+            res.headersSent
+        ) {
+
+            return next(
+                error
+            );
+        }
+
+
+        res
+            .status(500)
+            .json({
+                error:
+                    "A apărut o eroare internă pe server."
+            });
+    }
+);
+
+
+// ======================================================
+// START SERVER
+// ======================================================
+
+app.listen(
+    PORT,
+
+    () => {
+
+        console.log(
+            `DIICOT Command Center rulează pe portul ${PORT}`
+        );
+
+        console.log(
+            `Discord Guild: ${GUILD_ID || "NECONFIGURAT"}`
+        );
+
+        console.log(
+            `Supabase: ${SUPABASE_URL ? "CONFIGURAT" : "NECONFIGURAT"}`
+        );
+
+        // Nu executăm apeluri de rețea la inițializarea unui Worker.
+        // CORS pentru noul domeniu se configurează după primul deploy.
+    }
+);
