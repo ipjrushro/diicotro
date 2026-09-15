@@ -10,15 +10,14 @@
     "deploy": "wrangler deploy --keep-vars"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0",
     "@supabase/supabase-js": "^2.49.0",
-    "axios": "^1.7.9",
+    "compression": "^1.7.5",
     "cookie-session": "^2.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "multer": "^1.4.5-lts.1",
-    "@aws-sdk/client-s3": "^3.0.0",
-    "@aws-sdk/s3-request-presigner": "^3.0.0",
-    "compression": "^1.7.5",
     "wrangler": "^4.0.0"
   }
 }
