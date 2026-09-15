@@ -73,8 +73,8 @@ import cookieSession from "cookie-session";
 import path from "node:path";
 import crypto from "node:crypto";
 import multer from "multer";
-import compression from "compression";
 import dotenv from "dotenv";
+import { DOMParser } from "@xmldom/xmldom";
 import { createClient } from "@supabase/supabase-js";
 import {
     S3Client,
@@ -87,6 +87,12 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
+// AWS S3 interpretează răspunsurile XML primite de la Backblaze B2.
+// Cloudflare Workers nu oferă DOMParser implicit, așa că îl furnizăm aici.
+if (typeof globalThis.DOMParser === "undefined") {
+    globalThis.DOMParser = DOMParser;
+}
+
 dotenv.config();
 
 // Cloudflare Workers bundles do not expose a filesystem URL through
@@ -97,19 +103,10 @@ const __dirname = path.join(process.cwd(), "public");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ======================================================
-// BANDWIDTH OPTIMIZATION
-// Comprimă automat HTML/CSS/JS/JSON înainte de a pleca din Render.
-// Fișierele deja mici nu sunt comprimate pentru a evita overhead inutil.
-// ======================================================
+// Cloudflare comprimă automat răspunsurile la marginea rețelei. Middleware-ul
+// Node `compression` poate lăsa deschise fluxurile pentru răspunsurile JSON
+// mari și Workers anulează atunci cererea ca fiind blocată.
 app.set("etag", "strong");
-
-app.use(
-    compression({
-        threshold: 1024,
-        level: 6
-    })
-);
 
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
