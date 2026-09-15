@@ -74,7 +74,13 @@ import path from "node:path";
 import crypto from "node:crypto";
 import multer from "multer";
 import dotenv from "dotenv";
-import { DOMParser } from "@xmldom/xmldom";
+import {
+    DOMParser,
+    Node as XMLNode,
+    Element as XMLElement,
+    Document as XMLDocument,
+    XMLSerializer
+} from "@xmldom/xmldom";
 import { createClient } from "@supabase/supabase-js";
 import {
     S3Client,
@@ -91,6 +97,18 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 // Cloudflare Workers nu oferă DOMParser implicit, așa că îl furnizăm aici.
 if (typeof globalThis.DOMParser === "undefined") {
     globalThis.DOMParser = DOMParser;
+}
+if (typeof globalThis.Node === "undefined") {
+    globalThis.Node = XMLNode;
+}
+if (typeof globalThis.Element === "undefined") {
+    globalThis.Element = XMLElement;
+}
+if (typeof globalThis.Document === "undefined") {
+    globalThis.Document = XMLDocument;
+}
+if (typeof globalThis.XMLSerializer === "undefined") {
+    globalThis.XMLSerializer = XMLSerializer;
 }
 
 dotenv.config();
