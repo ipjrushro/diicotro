@@ -4240,24 +4240,12 @@ app.post(
 
         const reportId = crypto.randomUUID();
         const images = [];
-        const uploads = [];
 
         for (const file of files) {
             const contentType = String(file.type);
             const extension = getExtensionFromMime(contentType);
             const filename = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}.${extension}`;
             const key = `images/${reportId}/${filename}`;
-
-            const uploadUrl = await getSignedUrl(
-                b2,
-                new PutObjectCommand({
-                    Bucket: B2_BUCKET,
-                    Key: key,
-                    ContentType: contentType,
-                    CacheControl: "private, max-age=3600"
-                }),
-                { expiresIn: DIRECT_UPLOAD_TTL_SECONDS }
-            );
 
             images.push({
                 filename,
@@ -4268,11 +4256,6 @@ app.post(
                 size: Number(file.size)
             });
 
-            uploads.push({
-                key,
-                uploadUrl,
-                contentType
-            });
         }
 
         const uploadManifestToken = signDirectUploadManifest({
@@ -4282,11 +4265,92 @@ app.post(
             exp: Date.now() + DIRECT_UPLOAD_TTL_SECONDS * 1000
         });
 
+        // Uploadul trece prin Worker și apoi în B2. Astfel browserul nu mai
+        // depinde de regulile CORS ale bucketului Backblaze.
+        const uploads = images.map((image, index) => ({
+            key: image.key,
+            contentType: image.contentType,
+            uploadUrl:
+                `/api/report-upload-file?index=${index}&token=${encodeURIComponent(uploadManifestToken)}`
+        }));
+
         return res.json({
             reportId,
             uploads,
             uploadManifestToken
         });
+    }
+);
+
+
+// Primește o singură imagine pe același domeniu Cloudflare și o salvează în
+// Backblaze B2. Tokenul semnat leagă fișierul de utilizator și de raport.
+app.put(
+    "/api/report-upload-file",
+    requireAuth,
+    express.raw({
+        type: ["image/jpeg", "image/png", "image/webp"],
+        limit: `${DIRECT_UPLOAD_MAX_FILE_SIZE}b`
+    }),
+    async (req, res) => {
+        if (!ensureB2(res)) {
+            return;
+        }
+
+        try {
+            const manifest = verifyDirectUploadManifest(
+                req.query.token,
+                req.session.user.id
+            );
+            const index = Number(req.query.index);
+            const image = manifest.images?.[index];
+
+            if (!Number.isInteger(index) || !image) {
+                return res.status(400).json({
+                    error: "Imaginea din manifest nu este validă."
+                });
+            }
+
+            const contentType = String(req.get("content-type") || "")
+                .split(";")[0]
+                .trim()
+                .toLowerCase();
+            const body = req.body;
+
+            if (
+                contentType !== String(image.contentType) ||
+                !Buffer.isBuffer(body) ||
+                body.length !== Number(image.size) ||
+                body.length < 1 ||
+                body.length > DIRECT_UPLOAD_MAX_FILE_SIZE
+            ) {
+                return res.status(400).json({
+                    error: "Conținutul imaginii nu corespunde manifestului."
+                });
+            }
+
+            await b2.send(
+                new PutObjectCommand({
+                    Bucket: B2_BUCKET,
+                    Key: image.key,
+                    Body: body,
+                    ContentType: contentType,
+                    CacheControl: "private, max-age=3600"
+                })
+            );
+
+            return res.json({
+                success: true,
+                key: image.key
+            });
+        }
+        catch (error) {
+            console.error("Report image upload error:", error);
+
+            return res.status(500).json({
+                error: "Imaginea nu a putut fi salvată în Backblaze B2."
+            });
+        }
     }
 );
 
