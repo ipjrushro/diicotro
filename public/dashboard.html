@@ -11043,6 +11043,42 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 @media(max-width:1100px){.command-sidebar{width:224px!important}.command-main{margin-left:224px!important;width:calc(100% - 224px)!important}.command-topbar{left:224px!important;width:calc(100% - 224px)!important}.dashboard-content{padding-left:18px!important;padding-right:18px!important}}
 @media(max-width:780px){.command-main{margin-left:0!important;width:100%!important}.command-topbar{left:0!important;width:100%!important}.dashboard-content{padding:88px 13px 28px!important}}
 </style>
+<style id="premium-dashboard-v14-alignment-fix">
+/* Layout-ul principal este deja CSS Grid; nu mai adăugăm încă un offset de sidebar. */
+.command-main{
+    grid-column:2!important;
+    margin-left:0!important;
+    width:auto!important;
+    min-width:0!important;
+}
+.command-topbar{
+    left:auto!important;
+    right:auto!important;
+    width:auto!important;
+}
+.dashboard-content{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:20px 24px 38px!important;
+    box-sizing:border-box!important;
+}
+#overview.v5-overview{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+}
+@media(max-width:1100px){
+    .command-main{margin-left:0!important;width:auto!important}
+    .command-topbar{left:auto!important;width:auto!important}
+    .dashboard-content{padding:18px!important}
+}
+@media(max-width:780px){
+    .command-main{grid-column:1!important;width:100%!important}
+    .command-topbar{left:0!important;width:100%!important}
+    .dashboard-content{padding:13px!important}
+}
+</style>
 </head>
 
 
