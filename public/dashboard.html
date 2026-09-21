@@ -7343,6 +7343,21 @@
             line-height: 1.55;
         }
 
+        /* RESPONSABILITĂȚI GRADE — PREMIUM */
+        .rr-page{position:relative;overflow:hidden;min-height:calc(100vh - 90px);padding:34px;border:1px solid rgba(128,165,204,.12);border-radius:22px;background:linear-gradient(135deg,rgba(5,13,25,.96),rgba(11,25,43,.93)),url('/uploads/diicot-hero-bg.png') center/cover;box-shadow:0 28px 70px rgba(0,0,0,.32)}
+        .rr-page:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 78% 12%,rgba(216,42,62,.13),transparent 35%)}
+        .rr-hero,.rr-layout{position:relative;z-index:1}.rr-hero{display:flex;align-items:center;gap:18px;padding-bottom:27px;margin-bottom:25px;border-bottom:1px solid rgba(128,165,204,.12)}
+        .rr-hero-logo{width:66px;height:66px;object-fit:contain;filter:drop-shadow(0 10px 20px rgba(0,0,0,.35))}.rr-kicker{color:#ff596b;font-size:8px;font-weight:900;letter-spacing:3px;text-transform:uppercase}
+        .rr-hero h2{margin:5px 0 7px;color:#f7f9fc;font-size:clamp(26px,3vw,46px);line-height:1;text-transform:uppercase}.rr-hero p{max-width:760px;margin:0;color:#8ea3bc;font-size:10px;line-height:1.7}
+        .rr-layout{display:grid;grid-template-columns:255px minmax(0,1fr);gap:22px;align-items:start}.rr-nav,.rr-content{border:1px solid rgba(128,165,204,.11);border-radius:16px;background:rgba(9,21,37,.72);backdrop-filter:blur(18px)}.rr-nav{padding:12px;position:sticky;top:18px}
+        .rr-tab{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px;padding:14px;border:1px solid rgba(128,165,204,.1);border-radius:10px;background:rgba(25,43,66,.55);color:#8fa4bc;font:inherit;font-size:8px;font-weight:900;letter-spacing:.7px;text-align:left;cursor:pointer;transition:.2s ease}
+        .rr-tab:hover,.rr-tab.active{color:#fff;border-color:rgba(235,54,75,.65);background:linear-gradient(135deg,rgba(116,22,38,.46),rgba(49,18,32,.7));box-shadow:inset 3px 0 #ef3f55,0 12px 28px rgba(0,0,0,.18)}.rr-tab-count{min-width:25px;padding:4px 7px;border-radius:20px;background:rgba(255,255,255,.07);color:#f1b7bf;text-align:center}
+        .rr-note{margin-top:13px;padding:14px;border:1px solid rgba(232,181,66,.13);border-radius:10px;background:rgba(232,181,66,.045);color:#8fa2b7;font-size:8px;line-height:1.65}.rr-note strong{display:block;margin-bottom:6px;color:#e8b542}.rr-content{padding:20px}.rr-group{display:none}.rr-group.active{display:block;animation:rrFade .24s ease}@keyframes rrFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+        .rr-group-title{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:#f5f7fa;font-size:17px;text-transform:uppercase}.rr-group-title span{display:grid;place-items:center;width:31px;height:31px;border:1px solid rgba(237,58,78,.42);border-radius:8px;color:#ff5065;background:rgba(122,20,38,.22)}.rr-cards{display:grid;gap:13px}
+        .rr-card{position:relative;overflow:hidden;padding:17px 18px 17px 20px;border:1px solid rgba(128,165,204,.11);border-radius:12px;background:linear-gradient(145deg,rgba(13,29,50,.9),rgba(7,18,33,.83));box-shadow:0 15px 32px rgba(0,0,0,.14)}.rr-card:before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:4px;background:#df344b;box-shadow:0 0 12px rgba(223,52,75,.55)}
+        .rr-card-head{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:11px}.rr-rank{color:#f6f8fb;font-size:12px;font-weight:950;letter-spacing:.35px}.rr-code{padding:4px 7px;border-radius:6px;background:rgba(226,48,70,.18);color:#ff6476;font-size:7px;font-weight:950}.rr-role{color:#8fa5be;font-size:9px}.rr-card ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 22px;margin:0;padding:0;list-style:none}.rr-card li{position:relative;padding-left:14px;color:#a7b7ca;font-size:9px;line-height:1.55}.rr-card li:before{content:"";position:absolute;left:0;top:.55em;width:5px;height:5px;border-radius:50%;background:#d9344b}
+        @media(max-width:900px){.rr-page{padding:22px}.rr-layout{grid-template-columns:1fr}.rr-nav{position:static;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rr-tab{margin:0}.rr-note{grid-column:1/-1}}@media(max-width:620px){.rr-page{padding:16px;border-radius:15px}.rr-hero{align-items:flex-start}.rr-hero-logo{width:50px;height:50px}.rr-nav{grid-template-columns:1fr}.rr-card ul{grid-template-columns:1fr}}
+
         .fw-count-wrap {
             display: none;
         }
@@ -11589,10 +11604,55 @@ body.v8-font-small{font-size:92%!important}body.v8-font-large{font-size:108%!imp
                             <span class="home-action-arrow">→</span>
                         </button>
 
+                        <button type="button" class="home-action-card red rr-home-card" data-home-section="rank-responsibilities">
+                            <div class="home-action-icon">♛</div>
+                            <h3>RESPONSABILITĂȚI DIICOT</h3>
+                            <p>Consultă rolul, atribuțiile și limitele fiecărui grad din structura D.I.I.C.O.T.</p>
+                            <span class="home-action-arrow">→</span>
+                        </button>
+
                     </div>
 
                 </section>
 </section>
+            </section>
+
+            <section id="rank-responsibilities" class="dashboard-section">
+                <div class="rr-page">
+                    <header class="rr-hero">
+                        <img class="rr-hero-logo" src="/uploads/diicot-logo.png" alt="DIICOT">
+                        <div><div class="rr-kicker">Ministerul Afacerilor Interne • D.I.I.C.O.T</div><h2>Responsabilități grade</h2><p>Fiecare grad are atribuții și responsabilități clare. Cunoașterea lor este obligatorie și stă la baza evaluărilor, colaborării și promovărilor.</p></div>
+                    </header>
+                    <div class="rr-layout">
+                        <aside class="rr-nav">
+                            <button type="button" class="rr-tab active" data-rr-target="leadership"><span>♛ 1. CONDUCERE</span><span class="rr-tab-count">4</span></button>
+                            <button type="button" class="rr-tab" data-rr-target="administrative"><span>▥ 2. GRADE ADMINISTRATIVE</span><span class="rr-tab-count">2</span></button>
+                            <button type="button" class="rr-tab" data-rr-target="officers"><span>▣ 3. GRADE DE OFIȚERI</span><span class="rr-tab-count">7</span></button>
+                            <div class="rr-note"><strong>IMPORTANT</strong>Un grad superior înseamnă responsabilitate, nu privilegii. Fiecare membru răspunde pentru atribuțiile gradului său.</div>
+                        </aside>
+                        <main class="rr-content">
+                            <div class="rr-group active" data-rr-group="leadership"><h3 class="rr-group-title"><span>♛</span> 1. Conducere</h3><div class="rr-cards">
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">COORDONATOR DIICOT</strong><span class="rr-code">COORD</span><span class="rr-role">Management general RP</span></div><ul><li>Coordonarea tuturor structurilor D.I.I.C.O.T.</li><li>Armonizarea activității D.I.I.C.O.T.</li><li>Medierea conflictelor interne.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">PROCUROR</strong><span class="rr-code">PR</span><span class="rr-role">Autoritate juridică</span></div><ul><li>Deschiderea dosarelor penale.</li><li>Emiterea ordonanțelor.</li><li>Avizarea arestărilor.</li><li>Reprezentarea acuzării în instanță.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">PROCUROR-ȘEF ADJUNCT</strong><span class="rr-code">PSA</span><span class="rr-role">Conducere juridică</span></div><ul><li>Supervizarea procurorilor.</li><li>Avizarea dosarelor complexe.</li><li>Coordonarea anchetelor majore.</li><li>Înlocuirea Procurorului-Șef.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">PROCUROR-ȘEF</strong><span class="rr-code">PS</span><span class="rr-role">Autoritatea supremă D.I.I.C.O.T.</span></div><ul><li>Conducerea întregii structuri D.I.I.C.O.T.</li><li>Aprobarea finală pentru dosare majore.</li><li>Numiri și revocări din funcție.</li><li>Reprezentarea D.I.I.C.O.T. la nivel național.</li><li>Decizii strategice majore RP.</li></ul></article>
+                            </div></div>
+                            <div class="rr-group" data-rr-group="administrative"><h3 class="rr-group-title"><span>▥</span> 2. Grade administrative</h3><div class="rr-cards">
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">COMISAR</strong><span class="rr-code">C</span><span class="rr-role">Comandă tactică</span></div><ul><li>Conducerea structurilor operative.</li><li>Validarea operațiunilor speciale.</li><li>Coordonarea cu trupele speciale.</li><li>Avizarea finală a planurilor de acțiune.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">COMISAR-ȘEF</strong><span class="rr-code">CS</span><span class="rr-role">Conducere strategică</span></div><ul><li>Conducerea întregii structuri D.I.I.C.O.T.</li><li>Stabilirea politicii operative.</li><li>Aprobarea finală pentru operațiuni critice.</li><li>Reprezentarea D.I.I.C.O.T. în fața conducerii M.A.I.</li><li>Colaborarea directă cu Procurorul-Șef.</li></ul></article>
+                            </div></div>
+                            <div class="rr-group" data-rr-group="officers"><h3 class="rr-group-title"><span>▣</span> 3. Grade de ofițeri</h3><div class="rr-cards">
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">AGENT STAGIAR</strong><span class="rr-code">AS</span><span class="rr-role">Informare și suport</span></div><ul><li>Asistență în anchete: observare, notițe și escortă.</li><li>Supravegheri simple: follow și stakeout.</li><li>Participă la percheziții fără drept de decizie.</li><li>Învățarea procedurilor D.I.I.C.O.T.</li><li>Nu poate conduce operațiuni.</li><li>Nu poate emite mandate sau ordonanțe.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">AGENT OPERATIV</strong><span class="rr-code">AO</span><span class="rr-role">Execuție</span></div><ul><li>Investigații de bază: trafic minor și spălare de bani la nivel redus.</li><li>Interceptări RP.</li><li>Rețineri cu aprobare.</li><li>Participă activ la deschideri.</li><li>Redactează rapoarte operative.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">AGENT PRINCIPAL</strong><span class="rr-code">AP</span><span class="rr-role">Agent cu experiență</span></div><ul><li>Investigații complexe privind rețele organizate.</li><li>Coordonarea agenților inferiori.</li><li>Propuneri pentru dosare penale.</li><li>Participă la interogări.</li><li>Poate conduce echipe mici.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">SUB-INSPECTOR</strong><span class="rr-code">SI</span><span class="rr-role">Decizie operativă</span></div><ul><li>Supervizarea investigațiilor operative.</li><li>Validarea rapoartelor agenților.</li><li>Coordonarea deschiderilor mici.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">INSPECTOR</strong><span class="rr-code">I</span><span class="rr-role">Ofițer de caz</span></div><ul><li>Gestionarea dosarelor penale D.I.I.C.O.T.</li><li>Coordonarea anchetelor majore.</li><li>Avizarea perchezițiilor.</li><li>Colaborarea directă cu procurorii.</li><li>Stabilirea strategiilor de intervenție.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">INSPECTOR PRINCIPAL</strong><span class="rr-code">IP</span><span class="rr-role">Coordonare avansată</span></div><ul><li>Supravegherea mai multor dosare simultan.</li><li>Conducerea echipelor operative mari.</li><li>Avizarea propunerilor de mandate.</li><li>Evaluarea personalului inferior.</li></ul></article>
+                                <article class="rr-card"><div class="rr-card-head"><strong class="rr-rank">SUB-COMISAR</strong><span class="rr-code">SC</span><span class="rr-role">Conducere operațională</span></div><ul><li>Planificarea operațiunilor de amploare.</li><li>Coordonarea deschiderilor majore.</li><li>Stabilirea priorităților operative.</li><li>Control intern al procedurilor.</li><li>Rapoarte către Comisar.</li></ul></article>
+                            </div></div>
+                        </main>
+                    </div>
+                </div>
             </section>
 
 
@@ -18423,6 +18483,18 @@ const query =
     }
 
     bindHomeActionCards();
+
+    document.querySelectorAll(".rr-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            const target = tab.dataset.rrTarget;
+            document.querySelectorAll(".rr-tab").forEach(item =>
+                item.classList.toggle("active", item === tab)
+            );
+            document.querySelectorAll(".rr-group").forEach(group =>
+                group.classList.toggle("active", group.dataset.rrGroup === target)
+            );
+        });
+    });
 
 
     /* =========================================================
