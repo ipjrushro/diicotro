@@ -14003,7 +14003,22 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 
                         </div>
 
-                        
+                        <aside class="profile-command-pass" aria-label="Nivel acces profil">
+                            <div class="profile-command-pass-top">
+                                <span class="profile-command-shield">◆</span>
+                                <div>
+                                    <small>CREDENȚIAL INTERN</small>
+                                    <strong>ACCES SECURIZAT</strong>
+                                </div>
+                            </div>
+                            <div class="profile-command-pass-lines">
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                            <div class="profile-command-pass-bottom">
+                                <div><small>UNITATE</small><strong>D.I.I.C.O.T</strong></div>
+                                <div><small>SESIUNE</small><strong class="profile-pass-online">ACTIVĂ</strong></div>
+                            </div>
+                        </aside>
 
                     </div>
 
@@ -18289,6 +18304,57 @@ const query =
        NAVIGATION
     ========================================================== */
 
+    const sectionLoadPromises = new Map();
+
+    function setSectionLoading(sectionId, loading) {
+        const section = document.getElementById(sectionId);
+        section?.classList.toggle("section-loading", loading);
+        document.body.classList.toggle(
+            "dashboard-loading",
+            Boolean(document.querySelector(".dashboard-section.active.section-loading"))
+        );
+    }
+
+    function loadSectionData(section) {
+        if (sectionLoadPromises.has(section)) {
+            return sectionLoadPromises.get(section);
+        }
+
+        const loaders = {
+            "my-reports": () => loadMyReports(),
+            personnel: () => loadPersonnel(),
+            leave: async () => {
+                await loadLeave();
+                if (Number(currentUser?.rankLevel || 0) >= 10) {
+                    await loadAdminLeave();
+                }
+            },
+            docs: () => loadDocs(),
+            blacklist: () => loadBlacklist(),
+            admin: () => loadAdminReports(),
+            profile: () => loadProfile()
+        };
+
+        const loader = loaders[section];
+        if (!loader) {
+            if (section === "penal-code") renderPenalCode();
+            if (section === "leadership") updateAnnouncementPreview();
+            return Promise.resolve();
+        }
+
+        setSectionLoading(section, true);
+        const promise = Promise.resolve()
+            .then(loader)
+            .catch(error => console.error(`Section load (${section}):`, error))
+            .finally(() => {
+                sectionLoadPromises.delete(section);
+                setSectionLoading(section, false);
+            });
+
+        sectionLoadPromises.set(section, promise);
+        return promise;
+    }
+
     function openSection(id) {
 
         const adminSections = [
@@ -18365,6 +18431,11 @@ const query =
                 "active"
             );
 
+        document.body.classList.toggle(
+            "dashboard-loading",
+            Boolean(document.querySelector(".dashboard-section.active.section-loading"))
+        );
+
     
 
         if (id === "meeting-attendance") {
@@ -18426,7 +18497,7 @@ const query =
                 button.addEventListener(
                     "click",
 
-                    async function () {
+                    function () {
 
                         const section =
                             this.dataset.section;
@@ -18460,12 +18531,11 @@ const query =
                                 );
 
 
-                            await loadProfile();
-
-
                             openSection(
                                 "profile"
                             );
+
+                            loadSectionData("profile");
 
 
                             return;
@@ -18477,91 +18547,7 @@ const query =
                         );
 
 
-                        if (
-                            section ===
-                            "my-reports"
-                        ) {
-
-                            await loadMyReports();
-                        }
-
-
-                        if (
-                            section ===
-                            "personnel"
-                        ) {
-
-                            await loadPersonnel();
-                        }
-
-
-                        if (
-                            section ===
-                            "leave"
-                        ) {
-
-                            await loadLeave();
-
-
-                            if (
-                                Number(
-                                    currentUser?.rankLevel ||
-                                    0
-                                ) >= 10
-                            ) {
-
-                                await loadAdminLeave();
-                            }
-                        }
-
-
-                        if (
-                            section ===
-                            "docs"
-                        ) {
-
-                            await loadDocs();
-                        }
-
-
-                        /* =========================================
-                           COD PENAL
-                        ========================================== */
-
-                        if (
-                            section ===
-                            "penal-code"
-                        ) {
-
-                            renderPenalCode();
-                        }
-
-
-                        if (
-                            section ===
-                            "leadership"
-                        ) {
-
-                            updateAnnouncementPreview();
-                        }
-
-
-                        if (
-                            section ===
-                            "blacklist"
-                        ) {
-
-                            await loadBlacklist();
-                        }
-
-
-                        if (
-                            section ===
-                            "admin"
-                        ) {
-
-                            await loadAdminReports();
-                        }
+                        loadSectionData(section);
 
                     }
                 );
@@ -18576,7 +18562,7 @@ const query =
         document
             .querySelectorAll("[data-home-section]")
             .forEach(card => {
-                card.addEventListener("click", async () => {
+                card.addEventListener("click", () => {
                     const section = card.dataset.homeSection;
 
                     if (
@@ -18599,14 +18585,12 @@ const query =
 
                     openSection(section);
 
-                    if (section === "my-reports") await loadMyReports();
-                    if (section === "personnel") await loadPersonnel();
-                    if (section === "leave") await loadLeave();
-                    if (section === "docs") await loadDocs();
-                    if (section === "penal-code") renderPenalCode();
-                    if (section === "blacklist") await loadBlacklist();
-                    if (section === "admin") await loadAdminReports();
-                    if (section === "complaints-admin") await loadAdminComplaints();
+                    loadSectionData(section);
+                    if (section === "complaints-admin") {
+                        loadAdminComplaints().catch(error =>
+                            console.error("Complaints load:", error)
+                        );
+                    }
                 });
             });
     }
@@ -32787,6 +32771,327 @@ const query =
             50% { transform: translateY(-2px); }
         }
 
+        /* V17 — navigare instant și feedback pentru încărcarea datelor */
+        body::before {
+            content: "";
+            position: fixed;
+            z-index: 99999;
+            top: 0;
+            left: 0;
+            width: 32%;
+            height: 2px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-110%);
+            background: linear-gradient(90deg, transparent, #efc15a, #55c8df, transparent);
+            box-shadow: 0 0 14px rgba(85, 200, 223, .4);
+        }
+
+        body.dashboard-loading::before {
+            opacity: 1;
+            animation: dashboardLoadBar 1.05s ease-in-out infinite;
+        }
+
+        .dashboard-section.section-loading.active {
+            cursor: progress;
+        }
+
+        .dashboard-section.section-loading.active::after {
+            content: "Se actualizează datele…";
+            position: fixed;
+            z-index: 9990;
+            right: 28px;
+            bottom: 24px;
+            padding: 10px 14px;
+            border: 1px solid rgba(85, 200, 223, .24);
+            border-radius: 12px;
+            color: #b9dce5;
+            background: rgba(5, 16, 27, .92);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, .3);
+            font: 700 10px/1.2 Inter, sans-serif;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            backdrop-filter: blur(14px);
+            animation: sectionLoadingIn .18s ease-out both;
+        }
+
+        @keyframes dashboardLoadBar {
+            from { transform: translateX(-110%); }
+            to { transform: translateX(420%); }
+        }
+
+        @keyframes sectionLoadingIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 700px) {
+            .dashboard-section.section-loading.active::after {
+                right: 14px;
+                bottom: 14px;
+            }
+        }
+
+/* =========================================================
+   V18 — PROFIL OPERAȚIONAL PREMIUM
+========================================================= */
+#profile{
+    position:relative;
+    isolation:isolate;
+}
+#profile::before{
+    content:"";
+    position:absolute;
+    z-index:-1;
+    inset:-20px;
+    pointer-events:none;
+    background:
+        radial-gradient(circle at 82% 2%,rgba(63,132,190,.10),transparent 28%),
+        radial-gradient(circle at 5% 34%,rgba(218,174,83,.07),transparent 25%);
+}
+#profile .profile-title-row{
+    align-items:flex-end!important;
+    padding:4px 3px 8px!important;
+}
+#profile #profile-section-title{
+    margin-top:5px!important;
+    font-size:clamp(30px,3vw,44px)!important;
+    font-weight:950!important;
+    letter-spacing:-1.5px!important;
+}
+#profile #profile-section-kicker{
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    color:#7fa9cf!important;
+    font-size:9px!important;
+}
+#profile #profile-section-kicker::before{
+    content:"";
+    width:22px;
+    height:1px;
+    background:#ddb762;
+    box-shadow:0 0 10px rgba(221,183,98,.45);
+}
+#profile .profile-v4-hero{
+    min-height:340px!important;
+    border-radius:26px!important;
+    border-color:rgba(124,171,210,.22)!important;
+    background:#040c16!important;
+    box-shadow:0 32px 80px rgba(0,0,0,.38),inset 0 1px rgba(255,255,255,.05)!important;
+}
+#profile .profile-v4-hero::before{
+    content:"";
+    position:absolute;
+    z-index:2;
+    inset:0 auto 0 0;
+    width:3px;
+    background:linear-gradient(180deg,transparent 8%,#dfb85f 35%,#5ca6dc 72%,transparent 94%);
+}
+#profile .profile-v4-hero-bg{
+    background:
+        linear-gradient(90deg,rgba(3,10,18,.97) 0%,rgba(3,10,18,.88) 39%,rgba(3,10,18,.54) 70%,rgba(3,10,18,.72) 100%),
+        linear-gradient(180deg,rgba(4,11,19,.08),rgba(4,11,19,.65)),
+        url('/uploads/diicot-profile-bg.png') center 43%/cover no-repeat!important;
+    transform:scale(1.015);
+}
+#profile .profile-v4-hero-bg::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    opacity:.13;
+    background-image:linear-gradient(rgba(119,169,210,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(119,169,210,.18) 1px,transparent 1px);
+    background-size:46px 46px;
+    mask-image:linear-gradient(90deg,#000,transparent 75%);
+}
+#profile .profile-v4-topline{
+    height:60px!important;
+    padding:0 28px!important;
+    border-bottom-color:rgba(151,190,222,.10)!important;
+    background:rgba(3,11,20,.62)!important;
+    backdrop-filter:blur(16px);
+}
+#profile .profile-v4-main{
+    grid-template-columns:150px minmax(300px,1fr) 250px!important;
+    gap:28px!important;
+    min-height:280px!important;
+    padding:24px 30px 30px!important;
+}
+#profile .profile-v4-avatar-ring{
+    width:132px!important;
+    height:132px!important;
+    padding:3px!important;
+    border-radius:50%!important;
+    background:conic-gradient(from 210deg,#5d9fdd,#d9b35d,#273f59,#5d9fdd)!important;
+    box-shadow:0 24px 55px rgba(0,0,0,.48),0 0 0 7px rgba(99,154,205,.055),0 0 45px rgba(82,151,211,.13)!important;
+}
+#profile .profile-v4-avatar-ring .profile-avatar{
+    border-radius:50%!important;
+    border:5px solid #07121f!important;
+}
+#profile .profile-v4-online-dot{
+    top:98px!important;
+    right:-1px!important;
+    width:18px!important;
+    height:18px!important;
+}
+#profile .profile-v4-avatar-label{
+    margin-top:14px!important;
+    padding:7px 11px!important;
+    font-size:7px!important;
+}
+#profile .profile-v4-identity .profile-status{
+    margin-bottom:20px!important;
+    padding:7px 10px!important;
+    font-size:7px!important;
+}
+#profile .profile-v4-identity #profile-name{
+    max-width:620px;
+    font-size:clamp(30px,3.2vw,48px)!important;
+    letter-spacing:-1.8px!important;
+    text-shadow:0 13px 30px rgba(0,0,0,.45);
+}
+#profile .profile-v4-identity #profile-username{
+    font-size:11px!important;
+    color:#8298ad!important;
+}
+#profile .profile-v4-identity .profile-rank-badge{
+    min-width:190px!important;
+    padding:14px 16px!important;
+    border-color:rgba(221,183,98,.28)!important;
+    background:linear-gradient(145deg,rgba(110,82,30,.28),rgba(13,25,38,.55))!important;
+}
+#profile .profile-v4-identity .profile-rank-badge strong{font-size:12px!important}
+#profile .profile-v4-tags span{
+    padding:7px 10px!important;
+    color:#91a5b8!important;
+    background:rgba(5,16,28,.58)!important;
+    border-color:rgba(133,174,208,.14)!important;
+}
+#profile .profile-command-pass{
+    position:relative;
+    overflow:hidden;
+    align-self:center;
+    padding:19px;
+    border:1px solid rgba(221,183,98,.2);
+    border-radius:18px;
+    background:linear-gradient(145deg,rgba(22,38,55,.86),rgba(5,14,24,.86));
+    box-shadow:0 22px 50px rgba(0,0,0,.31),inset 0 1px rgba(255,255,255,.045);
+    backdrop-filter:blur(18px);
+}
+#profile .profile-command-pass::after{
+    content:"DIICOT";
+    position:absolute;
+    right:-12px;
+    bottom:-12px;
+    color:rgba(255,255,255,.025);
+    font-size:48px;
+    font-weight:950;
+    letter-spacing:-3px;
+}
+#profile .profile-command-pass-top{display:flex;align-items:center;gap:12px}
+#profile .profile-command-shield{
+    display:grid;
+    place-items:center;
+    width:42px;
+    height:42px;
+    border:1px solid rgba(221,183,98,.24);
+    border-radius:12px;
+    color:#dfba64;
+    background:rgba(221,183,98,.08);
+}
+#profile .profile-command-pass small{display:block;color:#5e7489;font-size:7px!important;font-weight:900;letter-spacing:.12em}
+#profile .profile-command-pass strong{display:block;margin-top:4px;color:#e8edf2;font-size:9px;letter-spacing:.06em}
+#profile .profile-command-pass-lines{display:flex;gap:5px;height:35px;align-items:flex-end;margin:18px 0;padding:0 2px}
+#profile .profile-command-pass-lines span{display:block;flex:1;border-radius:3px;background:linear-gradient(180deg,#77add8,#345e80);opacity:.7}
+#profile .profile-command-pass-lines span:nth-child(1){height:45%}
+#profile .profile-command-pass-lines span:nth-child(2){height:78%}
+#profile .profile-command-pass-lines span:nth-child(3){height:58%}
+#profile .profile-command-pass-lines span:nth-child(4){height:100%;background:linear-gradient(180deg,#e0bb66,#806327)}
+#profile .profile-command-pass-lines span:nth-child(5){height:70%}
+#profile .profile-command-pass-bottom{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:13px;border-top:1px solid rgba(255,255,255,.065)}
+#profile .profile-pass-online{color:#53d8a5!important}
+#profile .profile-v4-stats{gap:15px!important;margin:16px 0!important}
+#profile .profile-v4-stat{
+    min-height:120px!important;
+    padding:18px!important;
+    border-radius:19px!important;
+    background:linear-gradient(145deg,rgba(12,27,44,.94),rgba(5,14,24,.91))!important;
+}
+#profile .profile-v4-stat::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:radial-gradient(circle at 100% 0,currentColor,transparent 42%);
+    opacity:.035;
+}
+#profile .profile-v4-stat-icon{width:52px!important;height:52px!important;border-radius:15px!important}
+#profile .profile-stat-svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#profile .profile-v4-stat-copy strong{font-size:26px!important}
+#profile .profile-up-card{
+    padding:25px!important;
+    border-radius:21px!important;
+    background:radial-gradient(circle at 100% 0,rgba(221,183,98,.11),transparent 31%),linear-gradient(145deg,rgba(11,25,42,.94),rgba(5,14,24,.92))!important;
+}
+#profile .profile-up-progress{padding:15px!important}
+#profile .profile-up-bar{overflow:hidden!important;height:7px!important;background:rgba(1,7,13,.8)!important}
+#profile .profile-up-bar i{background:linear-gradient(90deg,#3f7eae,#65b3e4,#d7b461)!important;box-shadow:0 0 14px rgba(91,170,221,.3)!important}
+#profile .profile-grid{gap:16px!important}
+#profile .profile-panel,#profile .profile-activity-panel{
+    border-radius:20px!important;
+    border-color:rgba(124,168,204,.14)!important;
+    background:linear-gradient(145deg,rgba(11,25,42,.94),rgba(5,14,24,.91))!important;
+    box-shadow:0 23px 55px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.025)!important;
+}
+#profile .profile-panel{padding:22px!important}
+#profile .profile-v4-panel-icon{width:42px!important;height:42px!important;flex-basis:42px!important;border-radius:12px!important}
+#profile .profile-small-btn,#profile .primary-btn,#profile .profile-back-btn{
+    border-radius:10px!important;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+#profile .primary-btn{
+    min-height:44px!important;
+    padding:0 18px!important;
+    border:1px solid rgba(105,174,224,.32)!important;
+    background:linear-gradient(135deg,#477fae,#265475)!important;
+    box-shadow:0 12px 28px rgba(31,87,128,.24)!important;
+}
+#profile .primary-btn:hover,#profile .profile-small-btn:hover,#profile .profile-back-btn:hover{transform:translateY(-2px)!important}
+#profile #profile-nickname,#profile #profile-readonly-name{
+    height:53px!important;
+    padding:0 15px!important;
+    border-radius:12px!important;
+    background:rgba(2,10,18,.68)!important;
+}
+#profile .system-row{
+    min-height:58px!important;
+    padding:0 10px!important;
+}
+#profile .system-row strong{
+    padding:6px 9px;
+    border:1px solid rgba(126,168,203,.11);
+    border-radius:8px;
+    background:rgba(255,255,255,.022);
+}
+#profile .profile-activity-panel{padding:22px!important;margin-top:16px!important}
+#profile #profile-activity-list>*{
+    border-radius:12px!important;
+    border-color:rgba(126,168,203,.11)!important;
+    background:rgba(2,10,18,.45)!important;
+}
+@media(max-width:1220px){
+    #profile .profile-v4-main{grid-template-columns:135px minmax(0,1fr)!important}
+    #profile .profile-command-pass{display:none}
+}
+@media(max-width:760px){
+    #profile .profile-v4-main{grid-template-columns:1fr!important;padding:24px 18px 28px!important}
+    #profile .profile-v4-identity #profile-name{font-size:32px!important}
+    #profile .profile-v4-name-row{align-items:center!important}
+    #profile .profile-v4-identity .profile-rank-badge{min-width:220px!important}
+    #profile .profile-v4-topline{padding:0 17px!important}
+}
+
 </style>
 <script id="premium-icons-v12">
 (() => {
@@ -32822,6 +33127,16 @@ const query =
     document.querySelectorAll('.v5-stat-icon').forEach((el,i)=>{el.innerHTML=`<svg class="premium-stat-svg" viewBox="0 0 24 24">${icons[statKeys[i]||'chart']}</svg>`});
     const cardKeys=['file','reports','shield','settings','user','check','users','chart','settings','crown'];
     document.querySelectorAll('#activities .home-action-icon').forEach((el,i)=>{el.innerHTML=`<svg class="premium-card-svg" viewBox="0 0 24 24">${icons[cardKeys[i]||'activity']}</svg>`});
+    const profileStatKeys=['reports','image','clock'];
+    document.querySelectorAll('#profile .profile-v4-stat-icon').forEach((el,i)=>{
+        el.innerHTML=`<svg class="profile-stat-svg" viewBox="0 0 24 24" aria-hidden="true">${icons[profileStatKeys[i]||'chart']}</svg>`;
+    });
+    const profilePanelKeys=['user','shield','activity'];
+    document.querySelectorAll('#profile .profile-v4-panel-icon').forEach((el,i)=>{
+        el.innerHTML=`<svg class="profile-stat-svg" viewBox="0 0 24 24" aria-hidden="true">${icons[profilePanelKeys[i]||'user']}</svg>`;
+    });
+    const passShield=document.querySelector('#profile .profile-command-shield');
+    if(passShield) passShield.innerHTML=`<svg class="profile-stat-svg" viewBox="0 0 24 24" aria-hidden="true">${icons.shield}</svg>`;
 })();
 </script>
 </body>
