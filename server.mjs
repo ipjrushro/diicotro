@@ -2000,7 +2000,7 @@ async function readB2JSON(key) {
 // ======================================================
 
 const B2_REPORT_CACHE_TTL_MS =
-    6 * 60 * 60 * 1000; // 6 ore
+    60 * 1000; // 1 minut - sincronizare rapidă cu rapoartele publicate pe Render
 
 let b2ReportCache = {
     reports: [],
@@ -2132,7 +2132,7 @@ async function getAllB2ReportsCached() {
                 };
 
                 console.log(
-                    `[B2 CACHE] ${reports.length} rapoarte încărcate în cache pentru 6 ore.`
+                    `[B2 CACHE] ${reports.length} rapoarte încărcate în cache pentru 1 minut.`
                 );
 
                 return reports;
