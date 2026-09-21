@@ -834,6 +834,233 @@ footer{border-top:1px solid rgba(255,255,255,.055);background:rgba(4,9,15,.84)}
 }
 
 </style>
+
+<style id="index-cinematic-v19">
+/* V19 — schimbare completă: landing cinematic premium */
+:root{--v19-blue:#67b6e8;--v19-gold:#e2bb68;--v19-ink:#030912}
+body{
+    background:#030912!important;
+    background-image:
+        radial-gradient(circle at 78% 6%,rgba(56,122,174,.14),transparent 31%),
+        radial-gradient(circle at 17% 62%,rgba(226,187,104,.055),transparent 27%)!important;
+}
+body::before{
+    z-index:0!important;
+    opacity:.55;
+    background-size:72px 72px!important;
+    mask-image:linear-gradient(to bottom,#000 0 48%,transparent 83%)!important;
+}
+.nav-shell{
+    position:fixed!important;
+    top:18px!important;
+    left:50%!important;
+    width:min(1480px,calc(100% - 40px))!important;
+    transform:translateX(-50%)!important;
+    border:1px solid rgba(139,183,218,.14)!important;
+    border-radius:18px!important;
+    background:rgba(3,10,18,.76)!important;
+    box-shadow:0 18px 60px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.035)!important;
+    backdrop-filter:blur(26px) saturate(140%)!important;
+}
+.navbar{width:100%!important;height:72px!important;padding:0 13px 0 17px!important}
+.brand{min-width:235px!important}
+.brand-emblem{
+    width:45px!important;height:45px!important;border-radius:13px!important;
+    border-color:rgba(226,187,104,.25)!important;
+    background:linear-gradient(145deg,rgba(226,187,104,.10),rgba(7,18,30,.8))!important;
+}
+.brand-emblem img{width:37px!important;height:37px!important}
+.brand-copy strong{font-size:17px!important;letter-spacing:3.5px!important}
+.brand-copy span{color:#87b7d8!important;font-size:7px!important;letter-spacing:2.2px!important}
+.nav-links{border:0!important;background:transparent!important;gap:2px!important}
+.nav-links a{min-height:38px!important;padding:0 14px!important;border-radius:9px!important;font-size:7px!important}
+.nav-links a:hover{background:rgba(103,182,232,.07)!important;color:#dcebf5!important}
+.nav-links a.active{color:#fff!important;background:rgba(103,182,232,.08)!important;box-shadow:inset 0 -2px 0 #67b6e8!important}
+.login-btn,.logout-btn{
+    border-color:rgba(103,182,232,.28)!important;
+    background:linear-gradient(135deg,rgba(50,114,159,.35),rgba(25,66,97,.28))!important;
+    color:#d9edf9!important;
+    box-shadow:0 10px 26px rgba(20,70,107,.16)!important;
+}
+.hero{
+    width:100%!important;
+    min-height:100vh!important;
+    padding:0!important;
+}
+.hero-stage{
+    min-height:100vh!important;
+    border:0!important;
+    border-radius:0!important;
+    background:
+        linear-gradient(90deg,rgba(2,8,15,.98) 0%,rgba(2,8,15,.91) 31%,rgba(2,8,15,.54) 59%,rgba(2,8,15,.73) 100%),
+        linear-gradient(180deg,rgba(3,9,16,.18) 0%,rgba(3,9,16,.03) 56%,#030912 100%),
+        url('/uploads/diicot-index-bg.png') center 37%/cover no-repeat!important;
+    box-shadow:none!important;
+}
+.hero-stage::before{
+    opacity:.34!important;
+    background-size:70px 70px!important;
+    mask-image:linear-gradient(90deg,#000,rgba(0,0,0,.45) 48%,transparent 82%)!important;
+}
+.hero-stage::after{
+    content:"D.I.I.C.O.T"!important;
+    top:auto!important;right:-2%!important;bottom:1%!important;
+    color:rgba(255,255,255,.025)!important;
+    font-size:clamp(95px,14vw,230px)!important;
+    letter-spacing:-8px!important;
+    transform:none!important;
+}
+.hero-grid{
+    width:min(1480px,calc(100% - 70px))!important;
+    min-height:100vh!important;
+    margin:0 auto!important;
+    grid-template-columns:minmax(0,1.1fr) minmax(430px,.9fr)!important;
+    gap:70px!important;
+    padding:142px 15px 80px!important;
+}
+.hero-copy{max-width:760px!important}
+.eyebrow{
+    padding:8px 11px!important;
+    border:1px solid rgba(103,182,232,.18)!important;
+    border-radius:999px!important;
+    background:rgba(40,99,140,.10)!important;
+    color:#9bc8e6!important;
+    font-size:8px!important;
+}
+.eyebrow::before{width:7px!important;height:7px!important;border-radius:50%!important;background:#57dca8!important;box-shadow:0 0 14px rgba(87,220,168,.7)!important}
+.hero-live-rail{
+    display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;
+}
+.hero-live-rail span{
+    display:inline-flex;align-items:center;gap:7px;padding:6px 9px;
+    border-left:1px solid rgba(226,187,104,.33);
+    color:#62788c;font-size:7px;font-weight:900;letter-spacing:.1em;
+}
+.hero-live-rail i{width:6px;height:6px;border-radius:50%;background:#51d9a5;box-shadow:0 0 11px rgba(81,217,165,.65)}
+.hero h1{
+    margin:28px 0 0!important;
+    font-size:clamp(68px,7.1vw,118px)!important;
+    line-height:.84!important;
+    letter-spacing:-6px!important;
+    text-shadow:0 20px 50px rgba(0,0,0,.45)!important;
+}
+.hero h1 .line2{
+    margin-top:18px!important;
+    background:linear-gradient(105deg,#f6f8fa 0%,#a8bed0 34%,#e5bd65 78%,#a97924 100%)!important;
+    -webkit-background-clip:text!important;background-clip:text!important;
+}
+.hero-sub{
+    max-width:590px!important;margin-top:29px!important;
+    padding-left:17px!important;border-left:2px solid rgba(226,187,104,.5)!important;
+    color:#9aafc0!important;font-size:14px!important;line-height:1.8!important;
+}
+.hero-actions{margin-top:34px!important;gap:13px!important}
+.primary-btn,.secondary-btn{min-height:57px!important;border-radius:13px!important;font-size:8px!important}
+.primary-btn{
+    color:#06101a!important;border-color:rgba(174,215,241,.65)!important;
+    background:linear-gradient(135deg,#bde4fa,#67b6e8 58%,#3f83b1)!important;
+    box-shadow:0 18px 40px rgba(48,134,190,.24),inset 0 1px rgba(255,255,255,.58)!important;
+}
+.secondary-btn{border-color:rgba(226,187,104,.24)!important;background:rgba(8,20,33,.54)!important;color:#e1c783!important;backdrop-filter:blur(12px)!important}
+.trustbar{margin-top:34px!important;gap:9px!important}
+.trust{
+    min-height:78px!important;padding:12px!important;
+    border-color:rgba(133,179,213,.12)!important;border-radius:14px!important;
+    background:linear-gradient(145deg,rgba(12,29,46,.58),rgba(4,13,23,.48))!important;
+    backdrop-filter:blur(14px)!important;
+}
+.trust i{border-color:rgba(103,182,232,.2)!important;color:#76bce8!important;background:rgba(53,125,171,.08)!important}
+.command-deck{min-height:630px!important;justify-content:flex-end!important}
+.deck-frame{
+    max-width:520px!important;aspect-ratio:.84!important;
+    border-radius:30px!important;
+    border-color:rgba(125,178,215,.18)!important;
+    background:
+        radial-gradient(circle at 50% 40%,rgba(84,157,205,.10) 0 22%,transparent 22.5%),
+        radial-gradient(circle at 50% 40%,transparent 0 34%,rgba(103,182,232,.09) 34.4% 34.7%,transparent 35%),
+        linear-gradient(155deg,rgba(11,29,47,.82),rgba(3,11,20,.91))!important;
+    box-shadow:0 38px 90px rgba(0,0,0,.43),inset 0 1px rgba(255,255,255,.045)!important;
+    backdrop-filter:blur(20px)!important;
+}
+.deck-frame::after{
+    content:"";position:absolute;inset:12px;border:1px solid rgba(255,255,255,.035);border-radius:23px;pointer-events:none;
+}
+.scan{top:40%!important;background:linear-gradient(90deg,rgba(103,182,232,.65),transparent)!important;box-shadow:0 0 15px rgba(103,182,232,.3)!important}
+.core-shield{top:40%!important;width:235px!important;height:280px!important;background:linear-gradient(165deg,rgba(73,146,195,.17),rgba(3,11,20,.98) 42%,#02070c)!important}
+.core-shield::before{border-color:rgba(116,190,234,.55)!important}
+.core-content img{filter:drop-shadow(0 0 24px rgba(93,164,211,.17))!important}
+.core-content span{color:#83bee4!important}
+.float-card{border-color:rgba(133,182,216,.13)!important;background:rgba(3,12,21,.78)!important}
+.float-card em{color:#56d9a8!important}
+.orbit-dot{background:#72c3ef!important;box-shadow:0 0 16px rgba(114,195,239,.85)!important}
+.deck-clearance{
+    position:absolute;z-index:7;left:22px;right:22px;bottom:22px;padding:17px;
+    border:1px solid rgba(226,187,104,.16);border-radius:15px;
+    background:linear-gradient(145deg,rgba(18,32,47,.88),rgba(3,12,21,.88));
+    box-shadow:0 20px 45px rgba(0,0,0,.28);backdrop-filter:blur(17px);
+}
+.clearance-head{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.clearance-head span{color:#637b90;font-size:7px;font-weight:900;letter-spacing:.12em}
+.clearance-head strong{color:#56d9a8;font-size:8px;letter-spacing:.08em}
+.clearance-bars{display:flex;gap:5px;margin:13px 0}
+.clearance-bars i{height:5px;flex:1;border-radius:8px;background:linear-gradient(90deg,#477fa6,#70bce8)}
+.clearance-bars i:last-child{background:linear-gradient(90deg,#9a7938,#e1bc68)}
+.deck-clearance small{color:#4e6579;font-size:6px;letter-spacing:.08em}
+.metrics-wrap{position:relative;z-index:4;margin-top:-34px!important}
+.metrics{
+    border-color:rgba(129,178,213,.16)!important;border-radius:20px!important;
+    background:rgba(5,15,25,.87)!important;
+    box-shadow:0 30px 75px rgba(0,0,0,.36),inset 0 1px rgba(255,255,255,.04)!important;
+    backdrop-filter:blur(24px)!important;
+}
+.metric{min-height:138px!important}
+.metric-icon{border-color:rgba(103,182,232,.2)!important;color:#75bce8!important;background:rgba(58,127,172,.08)!important}
+.metric b{color:#d7b668!important}
+.section{margin-top:105px!important}
+.section-heading span{color:#72b7e2!important}
+.section-heading h2{font-size:clamp(34px,4vw,58px)!important;max-width:860px!important;line-height:1!important}
+#features .cinematic-feature-grid{gap:18px!important}
+#features .cinematic-card{
+    min-height:500px!important;border-radius:24px!important;
+    border-color:rgba(125,176,212,.15)!important;
+    box-shadow:0 28px 65px rgba(0,0,0,.27)!important;
+}
+#features .cinematic-card:hover{border-color:rgba(103,182,232,.38)!important;box-shadow:0 36px 85px rgba(0,0,0,.42),0 0 34px rgba(55,135,185,.08)!important}
+#features .cinematic-card .feature-icon{border-color:rgba(103,182,232,.32)!important;color:#8bc8ed!important;background:rgba(5,20,32,.78)!important}
+#features .cinematic-arrow,#features .cinematic-kicker,#features .cinematic-card .feature-link{color:#83c0e6!important}
+#features .cinematic-card .feature-link{border-bottom-color:rgba(103,182,232,.3)!important}
+.security-strip{margin-top:20px!important;border-radius:18px!important;border-color:rgba(126,175,211,.13)!important;background:linear-gradient(145deg,rgba(10,25,41,.9),rgba(4,13,23,.92))!important}
+.security-item{min-height:128px!important}
+.security-icon{border-color:rgba(103,182,232,.2)!important;color:#78bee8!important;background:rgba(55,126,172,.07)!important}
+.cta{
+    min-height:290px!important;border-radius:25px!important;border-color:rgba(124,176,212,.18)!important;
+    background:linear-gradient(90deg,rgba(3,12,21,.96),rgba(3,12,21,.73)),url('/uploads/diicot-hero-bg.png') center 45%/cover no-repeat!important;
+}
+.cta::before{color:rgba(255,255,255,.03)!important}
+.cta-copy span{color:#75bae5!important}
+footer{background:#02070d!important;border-top-color:rgba(119,170,207,.10)!important}
+@media(max-width:1180px){
+    .hero-grid{grid-template-columns:1fr!important;padding-top:130px!important}
+    .hero-copy{max-width:800px!important}
+    .command-deck{justify-content:center!important;min-height:580px!important}
+    .deck-frame{max-width:540px!important}
+}
+@media(max-width:760px){
+    .nav-shell{top:9px!important;width:calc(100% - 18px)!important}
+    .navbar{height:64px!important;padding:0 8px!important}
+    .brand-copy span{display:none!important}
+    .hero-grid{width:calc(100% - 28px)!important;padding:110px 0 65px!important;gap:28px!important}
+    .hero h1{font-size:clamp(59px,19vw,88px)!important;letter-spacing:-4px!important}
+    .hero-live-rail span:nth-child(n+2){display:none}
+    .trustbar{grid-template-columns:1fr!important}
+    .command-deck{min-height:490px!important}
+    .deck-frame{max-width:400px!important;aspect-ratio:.82!important}
+    .float-card{display:none!important}
+    .core-shield{width:190px!important;height:225px!important}
+    .metrics-wrap{margin-top:-18px!important}
+    #features .cinematic-card{min-height:430px!important}
+}
+</style>
 </head>
 
 <body>
@@ -872,6 +1099,12 @@ footer{border-top:1px solid rgba(255,255,255,.055);background:rgba(4,9,15,.84)}
 
             <div class="hero-copy">
                 <div class="eyebrow">DIRECȚIA DE INVESTIGARE A INFRACȚIUNILOR</div>
+
+                <div class="hero-live-rail">
+                    <span><i></i> SISTEM OPERAȚIONAL</span>
+                    <span>ACCES INTERN</span>
+                    <span>RUSH ROMÂNIA</span>
+                </div>
 
                 <h1>
                     <span class="line1">CENTRU</span>
@@ -941,6 +1174,15 @@ footer{border-top:1px solid rgba(255,255,255,.055);background:rgba(4,9,15,.84)}
                             <strong>DIICOT</strong>
                             <span>RUSH ROMÂNIA</span>
                         </div>
+                    </div>
+
+                    <div class="deck-clearance">
+                        <div class="clearance-head">
+                            <span>NIVEL DE ACCES</span>
+                            <strong>AUTORIZAT</strong>
+                        </div>
+                        <div class="clearance-bars"><i></i><i></i><i></i><i></i><i></i></div>
+                        <small>CONEXIUNE SECURIZATĂ • DISCORD OAuth2</small>
                     </div>
                 </div>
             </div>
@@ -1394,6 +1636,27 @@ footer{border-top:1px solid rgba(255,255,255,.055);background:rgba(4,9,15,.84)}
 
     verificaAutentificarea();
 
+</script>
+
+<script id="index-premium-icons-v19">
+(() => {
+    const icons = {
+        shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',
+        command:'<path d="M4 19V5"/><path d="M4 15h4l2-6 4 10 2-6h4"/>',
+        users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/>',
+        reports:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+        scale:'<path d="m16 16 3-8 3 8a5 5 0 0 1-6 0ZM2 16l3-8 3 8a5 5 0 0 1-6 0Z"/><path d="M12 3v18M3 7h18M8 21h8"/>',
+        lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+        clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+        settings:'<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 1 1-2.05-4.95M19 4v5h-5"/>'
+    };
+    const svg = key => `<svg viewBox="0 0 24 24" aria-hidden="true" style="width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round">${icons[key]}</svg>`;
+    const apply=(selector,keys)=>document.querySelectorAll(selector).forEach((el,i)=>el.innerHTML=svg(keys[i]||keys[0]));
+    apply('.trust i',['shield','command','users']);
+    apply('.metric-icon',['users','reports','scale','shield']);
+    apply('#features .feature-icon',['reports','users','settings','scale']);
+    apply('.security-icon',['lock','command','clock','shield']);
+})();
 </script>
 
 </body>
