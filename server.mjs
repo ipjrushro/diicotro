@@ -5051,6 +5051,106 @@ app.get(
 
 
 // ======================================================
+// EXPORT ACTIVITATE PERSONAL — CONDUCERE (CSV / EXCEL)
+// ======================================================
+
+function csvCell(value) {
+    return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function callsignFromDisplayName(value) {
+    const match = String(value || "").match(/\[\s*(D-\d{1,2})\s*\]/i);
+    return match ? normalizeCallsign(match[1]) : "";
+}
+
+app.get(
+    "/api/leadership/reports-export.csv",
+    requireAdmin,
+    async (req, res) => {
+        if (!ensureB2(res)) {
+            return;
+        }
+
+        try {
+            const [guildMembers, reports] = await Promise.all([
+                fetchAllGuildMembersForPersonnel(),
+                listB2Reports()
+            ]);
+
+            const personnel = (guildMembers || [])
+                .map(mapDiscordPersonnelMember)
+                .filter(Boolean)
+                .sort((a, b) => {
+                    const aCallsign = callsignFromDisplayName(a.displayName);
+                    const bCallsign = callsignFromDisplayName(b.displayName);
+                    return aCallsign.localeCompare(bCallsign, "ro", { numeric: true }) ||
+                        String(a.displayName || "").localeCompare(String(b.displayName || ""), "ro");
+                });
+
+            const activityByUser = new Map();
+
+            for (const report of reports || []) {
+                const userId = String(report.authorId || report.author_id || "").trim();
+                if (!userId) continue;
+
+                if (!activityByUser.has(userId)) {
+                    activityByUser.set(userId, { total: 0, raids: 0, trainings: 0 });
+                }
+
+                const stats = activityByUser.get(userId);
+                const type = String(report.type || "").trim().toUpperCase();
+                stats.total += 1;
+                if (type === "RAZIE") stats.raids += 1;
+                if (type === "ANTRENAMENT") stats.trainings += 1;
+            }
+
+            const rows = [
+                ["CALLSIGN", "NUME", "DISCORD ID", "GRAD", "RAPOARTE", "RAZII", "ANTRENAMENTE"]
+            ];
+
+            for (const member of personnel) {
+                const stats = activityByUser.get(String(member.id)) || {
+                    total: 0,
+                    raids: 0,
+                    trainings: 0
+                };
+                const canOrganize = Number(member.rankLevel || 0) >= 4;
+
+                rows.push([
+                    callsignFromDisplayName(member.displayName) || "FĂRĂ CALLSIGN",
+                    removeExistingCallsign(member.displayName || member.username),
+                    member.id,
+                    member.rank,
+                    stats.total,
+                    canOrganize ? stats.raids : "-",
+                    canOrganize ? stats.trainings : "-"
+                ]);
+            }
+
+            const csv = "\uFEFF" + rows
+                .map(row => row.map(csvCell).join(";"))
+                .join("\r\n");
+
+            const date = new Date().toISOString().slice(0, 10);
+            res.setHeader("Content-Type", "text/csv; charset=utf-8");
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename="activitate-diicot-${date}.csv"`
+            );
+            res.setHeader("Cache-Control", "no-store");
+            return res.send(csv);
+        }
+        catch (error) {
+            console.error("Leadership reports export error:", error.message || error);
+            return res.status(500).json({
+                error: "Fișierul cu activitatea personalului nu a putut fi generat."
+            });
+        }
+    }
+);
+
+
+// ======================================================
 // ȘTERGERE GLOBALĂ RAPOARTE - ADMIN
 // Șterge atât JSON-urile rapoartelor, cât și imaginile B2.
 // Restul datelor din Supabase nu este atins.
