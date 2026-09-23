@@ -11105,6 +11105,33 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 #profile .profile-grid{gap:15px!important}#profile .profile-v4-panel-heading{min-height:65px!important;border-bottom:1px solid rgba(126,162,200,.09)!important}#profile .profile-v4-panel-icon{display:grid!important;place-items:center!important;width:31px!important;height:31px!important;border:1px solid rgba(101,159,214,.18)!important;border-radius:9px!important;background:rgba(65,117,169,.08)!important;color:#78afe2!important}
 #profile input,#profile textarea,#profile select{border:1px solid rgba(126,162,200,.12)!important;border-radius:10px!important;background:rgba(4,13,23,.55)!important;color:#e7edf4!important}#profile input:focus,#profile textarea:focus,#profile select:focus{border-color:rgba(101,159,214,.4)!important;box-shadow:0 0 0 3px rgba(101,159,214,.06)!important}
 @media(max-width:820px){.leadership-export-card{grid-template-columns:auto 1fr}.leadership-export-btn{grid-column:1/-1;justify-content:center}.profile-v4-main{grid-template-columns:1fr!important;text-align:center!important}.profile-v4-avatar-wrap{margin:0 auto!important}.profile-v4-name-row{display:block!important}.profile-rank-badge{margin:17px auto 0!important}.profile-v4-tags{justify-content:center!important}.profile-status{margin:0 auto!important}}
+
+
+/* TRANSFER ÎNTRE STRUCTURI */
+.transfer-modal-card{width:min(900px,94vw)!important;max-height:88vh;overflow:auto}
+.transfer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+.transfer-route{display:flex;align-items:center;gap:10px;margin-top:8px;color:#7690a9;font-size:9px;font-weight:900;letter-spacing:.8px}
+.transfer-route b{color:#f0bd4e}.transfer-route span{color:#4b9cff}
+.transfer-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.transfer-field{display:grid;gap:7px}.transfer-field.full{grid-column:1/-1}
+.transfer-field label{font-size:8px;font-weight:950;letter-spacing:.8px;color:#b9c7d6}
+.transfer-field input,.transfer-field textarea{width:100%;border:1px solid rgba(120,160,200,.15);border-radius:10px;background:rgba(4,13,23,.8);color:#edf5fd;padding:12px;outline:none}
+.transfer-field textarea{min-height:105px;resize:vertical}
+.transfer-field input:focus,.transfer-field textarea:focus{border-color:rgba(63,151,240,.5);box-shadow:0 0 0 3px rgba(63,151,240,.06)}
+.transfer-warning{margin:14px 0;padding:11px 13px;border:1px solid rgba(235,183,65,.18);border-radius:10px;background:rgba(235,183,65,.055);color:#d7b96e;font-size:8px;line-height:1.6}
+.transfer-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:15px}
+.transfer-btn{border:1px solid rgba(100,155,211,.2);border-radius:9px;padding:10px 14px;background:rgba(44,115,185,.18);color:#e8f3ff;font-size:8px;font-weight:950;cursor:pointer}
+.transfer-btn.primary{background:linear-gradient(135deg,#2478ca,#2e8be5);border-color:#3d94e9}.transfer-btn.reject{background:rgba(210,65,76,.12);border-color:rgba(235,81,92,.25);color:#ff8e97}
+.transfer-btn.approve{background:rgba(45,193,132,.12);border-color:rgba(45,193,132,.25);color:#63dfad}
+.transfer-list{display:grid;gap:10px;margin-top:18px}
+.transfer-row{padding:14px;border:1px solid rgba(115,157,200,.12);border-radius:12px;background:rgba(6,18,31,.72)}
+.transfer-row-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.transfer-row h4{margin:0;color:#eef5fb;font-size:11px}.transfer-row small{color:#71869b}
+.transfer-approvals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+.transfer-approval{padding:9px;border-radius:8px;border:1px solid rgba(120,160,200,.1);background:rgba(255,255,255,.018);font-size:8px;color:#8195a8}
+.transfer-approval b{display:block;margin-bottom:4px;color:#dce7f2}.transfer-status{font-size:7px;font-weight:950;letter-spacing:.6px}
+.transfer-status.APPROVED,.transfer-status.COMPLETED{color:#43d99e}.transfer-status.REJECTED{color:#ff737e}.transfer-status.PENDING{color:#e7b744}.transfer-row-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+@media(max-width:700px){.transfer-grid,.transfer-approvals{grid-template-columns:1fr}}
+
 </style>
 </head>
 
@@ -11721,6 +11748,17 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                             <div class="home-action-icon">♛</div>
                             <h3>RESPONSABILITĂȚI DIICOT</h3>
                             <p>Consultă rolul, atribuțiile și limitele fiecărui grad din structura D.I.I.C.O.T.</p>
+                            <span class="home-action-arrow">→</span>
+                        </button>
+
+
+                        <button type="button" class="home-action-card purple" id="open-transfer-modal">
+                            <div class="home-action-icon">⇄</div>
+                            <h3>TRANSFER CĂTRE POLIȚIA ROMÂNĂ</h3>
+                            <p>
+                                Trimite o cerere de transfer. Este necesară aprobarea
+                                Conducerii Poliției și a Conducerii DIICOT.
+                            </p>
                             <span class="home-action-arrow">→</span>
                         </button>
 
@@ -33139,5 +33177,131 @@ const query =
     if(passShield) passShield.innerHTML=`<svg class="profile-stat-svg" viewBox="0 0 24 24" aria-hidden="true">${icons.shield}</svg>`;
 })();
 </script>
+
+<div id="transfer-modal" class="modal-overlay" style="display:none;">
+  <div class="modal-card transfer-modal-card">
+    <div class="transfer-head">
+      <div>
+        <div class="home-launcher-kicker">TRANSFER INTERDEPARTAMENTAL</div>
+        <h2 style="margin:5px 0 0">Cerere transfer</h2>
+        <div class="transfer-route"><b>DIICOT</b><span>→</span><b>POLIȚIA ROMÂNĂ</b></div>
+      </div>
+      <button type="button" class="modal-close" id="transfer-close">×</button>
+    </div>
+    <div class="transfer-grid">
+      <div class="transfer-field full">
+        <label>MOTIVUL TRANSFERULUI</label>
+        <textarea id="transfer-reason" maxlength="1200" placeholder="Explică de ce dorești transferul..."></textarea>
+      </div>
+      <div class="transfer-field">
+        <label>VÂRSTA JUCĂTORULUI</label>
+        <input id="transfer-age" type="number" min="14" max="99" placeholder="Ex: 18">
+      </div>
+    </div>
+    <div class="transfer-warning">
+      Cererea trebuie aprobată de <b>Conducerea Poliției</b> și de <b>Conducerea DIICOT</b>.
+      După ambele aprobări, gradele structurii vechi sunt retrase automat și primești cel mai mic grad din noua structură.
+    </div>
+    <div id="transfer-message" style="min-height:16px;font-size:8px;color:#8da1b4"></div>
+    <div class="transfer-actions">
+      <button type="button" class="transfer-btn" id="transfer-cancel">ANULARE</button>
+      <button type="button" class="transfer-btn primary" id="transfer-submit">TRIMITE CEREREA</button>
+    </div>
+    <div class="transfer-list" id="transfer-list"></div>
+  </div>
+</div>
+
+
+<script>
+(() => {
+  const TRANSFER_SOURCE = "DIICOT";
+  const TRANSFER_DEST = TRANSFER_SOURCE === "POLITIE" ? "DIICOT" : "POLITIE";
+  const $ = id => document.getElementById(id);
+  const modal = $("transfer-modal");
+  const msg = $("transfer-message");
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  function statusLabel(v){
+    return ({PENDING:"ÎN AȘTEPTARE",APPROVED:"APROBAT",REJECTED:"RESPINS",COMPLETED:"TRANSFER EFECTUAT",APPROVED_WAITING_EXECUTION:"APROBAT • EROARE DISCORD"})[v] || v;
+  }
+  function setMessage(text, error=false){
+    if(!msg) return; msg.textContent=text||""; msg.style.color=error?"#ff7d87":"#66d9a9";
+  }
+  function openTransfer(){
+    if(!modal) return;
+    modal.style.display="flex";
+    document.body.style.overflow="hidden";
+    loadTransfers();
+  }
+  function closeTransfer(){
+    if(!modal) return;
+    modal.style.display="none";
+    document.body.style.overflow="";
+    setMessage("");
+  }
+
+  async function loadTransfers(){
+    const box=$("transfer-list"); if(!box) return;
+    box.innerHTML='<div style="color:#70869b;font-size:8px">Se încarcă cererile...</div>';
+    try{
+      const r=await fetch("/api/transfers",{credentials:"include"});
+      const d=await r.json(); if(!r.ok) throw new Error(d.error||"Eroare.");
+      if(!d.requests?.length){box.innerHTML='<div class="transfer-row"><small>Nu există cereri de transfer vizibile.</small></div>';return;}
+      box.innerHTML=d.requests.map(x=>`
+        <article class="transfer-row">
+          <div class="transfer-row-top">
+            <div><h4>${esc(x.userName)} • ${esc(x.source)} → ${esc(x.destination)}</h4><small>${esc(x.reason)}</small></div>
+            <span class="transfer-status ${esc(x.status)}">${esc(statusLabel(x.status))}</span>
+          </div>
+          <div class="transfer-approvals">
+            <div class="transfer-approval"><b>CONDUCERE POLIȚIE</b><span class="transfer-status ${esc(x.policeDecision)}">${esc(statusLabel(x.policeDecision))}</span></div>
+            <div class="transfer-approval"><b>CONDUCERE DIICOT</b><span class="transfer-status ${esc(x.diicotDecision)}">${esc(statusLabel(x.diicotDecision))}</span></div>
+          </div>
+          ${(x.status==="PENDING"&&(x.canDecidePolice||x.canDecideDiicot))?`
+          <div class="transfer-row-actions">
+            ${x.canDecidePolice&&x.policeDecision==="PENDING"?`<button class="transfer-btn approve" data-transfer-decision="${esc(x.id)}" data-dept="POLITIE" data-value="APPROVED">APROBĂ POLIȚIE</button><button class="transfer-btn reject" data-transfer-decision="${esc(x.id)}" data-dept="POLITIE" data-value="REJECTED">RESPINGE POLIȚIE</button>`:""}
+            ${x.canDecideDiicot&&x.diicotDecision==="PENDING"?`<button class="transfer-btn approve" data-transfer-decision="${esc(x.id)}" data-dept="DIICOT" data-value="APPROVED">APROBĂ DIICOT</button><button class="transfer-btn reject" data-transfer-decision="${esc(x.id)}" data-dept="DIICOT" data-value="REJECTED">RESPINGE DIICOT</button>`:""}
+          </div>`:""}
+        </article>`).join("");
+    }catch(e){box.innerHTML=`<div class="transfer-row"><small style="color:#ff7d87">${esc(e.message)}</small></div>`;}
+  }
+
+  $("open-transfer-modal")?.addEventListener("click",openTransfer);
+  $("transfer-close")?.addEventListener("click",closeTransfer);
+  $("transfer-cancel")?.addEventListener("click",closeTransfer);
+  modal?.addEventListener("click",e=>{if(e.target===modal)closeTransfer();});
+
+  $("transfer-submit")?.addEventListener("click",async function(){
+    this.disabled=true; setMessage("Se trimite cererea...");
+    try{
+      const r=await fetch("/api/transfers",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        source:TRANSFER_SOURCE,reason:$("transfer-reason")?.value||"",age:$("transfer-age")?.value||""
+      })});
+      const d=await r.json(); if(!r.ok) throw new Error(d.error||"Cererea nu a putut fi trimisă.");
+      setMessage("✓ Cererea a fost trimisă. Așteaptă aprobarea ambelor conduceri.");
+      if($("transfer-reason")) $("transfer-reason").value="";
+      if($("transfer-age")) $("transfer-age").value="";
+      await loadTransfers();
+    }catch(e){setMessage(e.message,true);}finally{this.disabled=false;}
+  });
+
+  $("transfer-list")?.addEventListener("click",async e=>{
+    const b=e.target.closest("[data-transfer-decision]"); if(!b)return;
+    const label=b.dataset.value==="APPROVED"?"aprobi":"respingi";
+    if(!confirm(`Sigur ${label} această cerere pentru ${b.dataset.dept}?`))return;
+    b.disabled=true;
+    try{
+      const r=await fetch(`/api/transfers/${encodeURIComponent(b.dataset.transferDecision)}/decision`,{
+        method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({department:b.dataset.dept,decision:b.dataset.value})
+      });
+      const d=await r.json(); if(!r.ok) throw new Error(d.error||"Decizia nu a putut fi salvată.");
+      setMessage(d.request?.status==="COMPLETED"?"✓ Ambele aprobări sunt gata. Transferul a fost efectuat automat.":"✓ Decizia a fost salvată.");
+      await loadTransfers();
+    }catch(err){setMessage(err.message,true);await loadTransfers();}
+  });
+})();
+</script>
+
 </body>
 </html>
