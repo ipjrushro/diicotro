@@ -11132,6 +11132,53 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 .transfer-status.APPROVED,.transfer-status.COMPLETED{color:#43d99e}.transfer-status.REJECTED{color:#ff737e}.transfer-status.PENDING{color:#e7b744}.transfer-row-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
 @media(max-width:700px){.transfer-grid,.transfer-approvals{grid-template-columns:1fr}}
 
+
+
+/* FIX TRANSFER MODAL — container independent de .modal-overlay-ul vechi */
+.transfer-modal-root{
+    position:fixed !important;
+    inset:0 !important;
+    z-index:99999 !important;
+    display:none;
+    align-items:center !important;
+    justify-content:center !important;
+    padding:24px !important;
+    background:rgba(1,7,14,.86) !important;
+    backdrop-filter:blur(12px) !important;
+    overflow:auto !important;
+}
+.transfer-modal-root .transfer-modal-card{
+    position:relative !important;
+    z-index:100000 !important;
+    width:min(820px,96vw) !important;
+    max-height:min(820px,90vh) !important;
+    margin:auto !important;
+    padding:24px !important;
+    overflow:auto !important;
+    border:1px solid rgba(91,160,225,.28) !important;
+    border-radius:16px !important;
+    background:
+      radial-gradient(circle at 100% 0%,rgba(42,132,220,.12),transparent 34%),
+      linear-gradient(145deg,rgba(9,22,38,.99),rgba(5,14,25,.99)) !important;
+    box-shadow:0 30px 100px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.025) inset !important;
+}
+.transfer-modal-root .modal-close{
+    position:static !important;
+    width:36px !important;height:36px !important;
+    flex:0 0 36px !important;
+    display:grid !important;place-items:center !important;
+    border:1px solid rgba(120,160,200,.15) !important;
+    border-radius:10px !important;
+    background:rgba(255,255,255,.025) !important;
+    color:#8fa4b8 !important;
+    cursor:pointer !important;
+}
+.transfer-modal-root .modal-close:hover{color:#fff !important;border-color:rgba(75,156,236,.38) !important;background:rgba(48,137,222,.1) !important}
+@media(max-width:700px){
+  .transfer-modal-root{padding:10px !important;align-items:flex-start !important}
+  .transfer-modal-root .transfer-modal-card{margin:10px auto !important;padding:17px !important;max-height:calc(100vh - 20px) !important}
+}
+
 </style>
 </head>
 
@@ -33178,7 +33225,7 @@ const query =
 })();
 </script>
 
-<div id="transfer-modal" class="modal-overlay" style="display:none;">
+<div id="transfer-modal" class="transfer-modal-root" style="display:none;">
   <div class="modal-card transfer-modal-card">
     <div class="transfer-head">
       <div>
