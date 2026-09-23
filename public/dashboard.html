@@ -33340,6 +33340,7 @@ const query =
 
 <script>
 (function(){
+  const TRANSFER_API_BASE = "https://mairush-hilz.onrender.com";
   const TRANSFER_SOURCE = "DIICOT";
   let transferFilter = "ALL";
   let transferData = [];
@@ -33398,7 +33399,7 @@ const query =
   async function loadTransfers(){
     const box=$("transfer-list"); if(box)box.innerHTML='<div class="transfer-row"><small>Se încarcă registrul...</small></div>';
     try{
-      const r=await fetch("/api/transfers",{credentials:"include",cache:"no-store"});
+      const r=await fetch(`${TRANSFER_API_BASE}/api/transfers`,{credentials:"include",cache:"no-store"});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||"Ruta API nu este disponibilă.");
       transferData=Array.isArray(d.requests)?d.requests:[];
@@ -33432,7 +33433,7 @@ const query =
         age:$("transfer-age")?.value||"",
         reason:$("transfer-reason")?.value||""
       };
-      const r=await fetch("/api/transfers",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      const r=await fetch(`${TRANSFER_API_BASE}/api/transfers`,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||"Cererea nu a putut fi trimisă.");
       setMessage(d.message||"Cererea a fost trimisă.");
@@ -33447,7 +33448,7 @@ const query =
     const b=e.target.closest("[data-transfer-decision]");if(!b)return;
     b.disabled=true;setMessage("Se salvează decizia...");
     try{
-      const r=await fetch(`/api/transfers/${encodeURIComponent(b.dataset.transferDecision)}/decision`,{
+      const r=await fetch(`${TRANSFER_API_BASE}/api/transfers/${encodeURIComponent(b.dataset.transferDecision)}/decision`,{
         method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({department:b.dataset.dept,decision:b.dataset.value})
       });
