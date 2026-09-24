@@ -22986,7 +22986,14 @@ const query =
        ADMIN REPORTS
     ========================================================== */
 
-    async function loadAdminReports() {
+    const ADMIN_REPORTS_UI_CACHE_TTL_MS = 5 * 60 * 1000;
+    let adminReportsUiCache = {
+        reports: null,
+        savedAt: 0
+    };
+    let adminReportsLoadPromise = null;
+
+    async function loadAdminReports(forceRefresh = false) {
 
         if (
             Number(
@@ -22994,42 +23001,89 @@ const query =
                 0
             ) < 10
         ) {
+            return;
+        }
+
+        const now = Date.now();
+        const cachedReports =
+            Array.isArray(adminReportsUiCache.reports)
+                ? adminReportsUiCache.reports
+                : null;
+
+        // Dacă avem lista completă și încă este proaspătă, o afișăm instant.
+        if (
+            !forceRefresh &&
+            cachedReports &&
+            (now - adminReportsUiCache.savedAt) < ADMIN_REPORTS_UI_CACHE_TTL_MS
+        ) {
+            document.getElementById("admin-total").textContent =
+                cachedReports.length;
+
+            renderReports(
+                "admin-reports-container",
+                cachedReports,
+                true
+            );
 
             return;
         }
 
+        // Nu permitem două numărări/încărcări simultane.
+        if (adminReportsLoadPromise) {
+            return adminReportsLoadPromise;
+        }
 
-        try {
+        adminReportsLoadPromise = (async () => {
+            try {
+                const reports =
+                    await fetchAllReportPages(
+                        "/api/admin/reports"
+                    );
 
-            const reports =
-                await fetchAllReportPages(
-                    "/api/admin/reports"
+                // Schimbăm UI-ul NUMAI după ce avem lista completă.
+                // Astfel numărul nu sare între rezultate în timpul încărcării.
+                adminReportsUiCache = {
+                    reports,
+                    savedAt: Date.now()
+                };
+
+                document
+                    .getElementById(
+                        "admin-total"
+                    )
+                    .textContent =
+                        reports.length;
+
+                renderReports(
+                    "admin-reports-container",
+                    reports,
+                    true
+                );
+            }
+            catch (error) {
+                console.error(
+                    "loadAdminReports:",
+                    error
                 );
 
+                // Dacă refresh-ul a eșuat, păstrăm ultima variantă bună.
+                if (cachedReports) {
+                    document.getElementById("admin-total").textContent =
+                        cachedReports.length;
 
-            document
-                .getElementById(
-                    "admin-total"
-                )
-                .textContent =
-                    reports.length;
+                    renderReports(
+                        "admin-reports-container",
+                        cachedReports,
+                        true
+                    );
+                }
+            }
+            finally {
+                adminReportsLoadPromise = null;
+            }
+        })();
 
-
-            renderReports(
-                "admin-reports-container",
-                reports,
-                true
-            );
-
-        }
-        catch (error) {
-
-            console.error(
-                "loadAdminReports:",
-                error
-            );
-        }
-
+        return adminReportsLoadPromise;
     }
 
 
