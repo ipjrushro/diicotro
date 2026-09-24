@@ -22437,36 +22437,43 @@ const query =
        MY REPORTS
     ========================================================== */
 
+    async function fetchAllReportPages(endpoint) {
+        const allReports = [];
+        let cursor = null;
+        let safety = 0;
+
+        do {
+            const url = new URL(endpoint, window.location.origin);
+            url.searchParams.set("limit", "40");
+            if (cursor) url.searchParams.set("cursor", cursor);
+
+            const response = await fetch(url.pathname + url.search, {
+                credentials: "include",
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error("Rapoartele nu au putut fi încărcate.");
+            }
+
+            const data = await response.json();
+            allReports.push(...(data.reports || []));
+            cursor = data.hasMore ? (data.nextCursor || null) : null;
+            safety += 1;
+        } while (cursor && safety < 500);
+
+        allReports.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return allReports;
+    }
+
     async function loadMyReports() {
 
         try {
 
-            const response =
-                await fetch(
-                    "/api/reports/my",
-                    {
-                        credentials:
-                            "include",
-
-                        cache:
-                            "no-store"
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                return;
-            }
-
-
-            const data =
-                await response.json();
-
-
             const reports =
-                data.reports ||
-                [];
+                await fetchAllReportPages(
+                    "/api/reports/my"
+                );
 
 
             document
@@ -22956,32 +22963,10 @@ const query =
 
         try {
 
-            const response =
-                await fetch(
-                    "/api/admin/reports",
-                    {
-                        credentials:
-                            "include",
-
-                        cache:
-                            "no-store"
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                return;
-            }
-
-
-            const data =
-                await response.json();
-
-
             const reports =
-                data.reports ||
-                [];
+                await fetchAllReportPages(
+                    "/api/admin/reports"
+                );
 
 
             document
