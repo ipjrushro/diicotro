@@ -2167,9 +2167,9 @@ async function getAllB2ReportsCached() {
 
 
 // Cloudflare Workers Free permite maximum 50 de subrequest-uri externe per invocare.
-// Citim rapoartele in pagini de maximum 40 obiecte B2, astfel incat fiecare request
-// al browserului sa ramana sub limita (1 LIST + max. 40 GET-uri).
-const B2_REPORTS_PAGE_SIZE = 40;
+// Citim rapoartele în pagini de maximum 20 obiecte B2. Marja mai mare evită
+// depășirea limitei de subrequest-uri Cloudflare când SDK-ul B2 mai face request-uri auxiliare.
+const B2_REPORTS_PAGE_SIZE = 20;
 
 async function listB2ReportsPage(authorId = null, cursor = null, requestedLimit = B2_REPORTS_PAGE_SIZE) {
     const limit = Math.max(1, Math.min(B2_REPORTS_PAGE_SIZE, Number(requestedLimit) || B2_REPORTS_PAGE_SIZE));
