@@ -2165,6 +2165,49 @@ async function getAllB2ReportsCached() {
     return b2ReportCacheRefreshPromise;
 }
 
+
+// Cloudflare Workers Free permite maximum 50 de subrequest-uri externe per invocare.
+// Citim rapoartele in pagini de maximum 40 obiecte B2, astfel incat fiecare request
+// al browserului sa ramana sub limita (1 LIST + max. 40 GET-uri).
+const B2_REPORTS_PAGE_SIZE = 40;
+
+async function listB2ReportsPage(authorId = null, cursor = null, requestedLimit = B2_REPORTS_PAGE_SIZE) {
+    const limit = Math.max(1, Math.min(B2_REPORTS_PAGE_SIZE, Number(requestedLimit) || B2_REPORTS_PAGE_SIZE));
+    const prefix = authorId ? `reports/${String(authorId)}/` : "reports/";
+
+    const response = await b2.send(
+        new ListObjectsV2Command({
+            Bucket: B2_BUCKET,
+            Prefix: prefix,
+            ContinuationToken: cursor || undefined,
+            MaxKeys: limit
+        })
+    );
+
+    const keys = (response.Contents || [])
+        .map(object => object.Key)
+        .filter(key => key && key.endsWith(".json"));
+
+    const rows = await Promise.all(
+        keys.map(async key => {
+            try {
+                return mapB2Report(await readB2JSON(key));
+            } catch (error) {
+                console.error("B2 paged report read error:", key, error.message);
+                return null;
+            }
+        })
+    );
+
+    const reports = sortB2Reports(rows.filter(Boolean));
+
+    return {
+        reports,
+        nextCursor: response.IsTruncated ? (response.NextContinuationToken || null) : null,
+        hasMore: Boolean(response.IsTruncated && response.NextContinuationToken)
+    };
+}
+
 async function listB2Reports(authorId = null) {
     const allReports =
         await getAllB2ReportsCached();
@@ -4977,33 +5020,22 @@ app.get(
     "/api/reports/my",
     requireAuth,
     async (req, res) => {
-        if (!ensureB2(res)) {
-            return;
-        }
-
+        if (!ensureB2(res)) return;
         try {
-            const reports =
-                await listB2Reports(
-                    req.session.user.id
-                );
-
-            const reportsForClient =
-                await withDirectB2ImageUrlsMany(reports);
-
-            res.json({
-                reports: reportsForClient
-            });
-        }
-        catch (error) {
-            console.error(
-                "My Reports Backblaze B2 Error:",
-                error
+            const page = await listB2ReportsPage(
+                req.session.user.id,
+                req.query.cursor || null,
+                req.query.limit
             );
-
-            res.status(500).json({
-                error:
-                    "Rapoartele nu au putut fi încărcate."
+            const reportsForClient = await withDirectB2ImageUrlsMany(page.reports);
+            res.json({
+                reports: reportsForClient,
+                nextCursor: page.nextCursor,
+                hasMore: page.hasMore
             });
+        } catch (error) {
+            console.error("My Reports Backblaze B2 Error:", error);
+            res.status(500).json({ error: "Rapoartele nu au putut fi încărcate." });
         }
     }
 );
@@ -5017,51 +5049,27 @@ app.get(
     "/api/admin/reports",
     requireAdmin,
     async (req, res) => {
-        if (!ensureB2(res)) {
-            return;
-        }
-
+        if (!ensureB2(res)) return;
         try {
-            const reports =
-                await listB2Reports();
-
-            const reportsForClient =
-                await withDirectB2ImageUrlsMany(reports);
-
+            const page = await listB2ReportsPage(
+                null,
+                req.query.cursor || null,
+                req.query.limit
+            );
+            const reportsForClient = await withDirectB2ImageUrlsMany(page.reports);
             res.json({
                 success: true,
-                total:
-                    reports.length,
-                reports: reportsForClient
+                reports: reportsForClient,
+                nextCursor: page.nextCursor,
+                hasMore: page.hasMore
             });
-        }
-        catch (error) {
-            console.error(
-                "Admin Reports Backblaze B2 Error:",
-                error
-            );
-
-            res.status(500).json({
-                error:
-                    "Rapoartele nu au putut fi încărcate."
-            });
+        } catch (error) {
+            console.error("Admin Reports Backblaze B2 Error:", error);
+            res.status(500).json({ error: "Rapoartele nu au putut fi încărcate." });
         }
     }
 );
 
-
-// ======================================================
-// EXPORT ACTIVITATE PERSONAL — CONDUCERE (CSV / EXCEL)
-// ======================================================
-
-function csvCell(value) {
-    return `"${String(value ?? "").replace(/"/g, '""')}"`;
-}
-
-function callsignFromDisplayName(value) {
-    const match = String(value || "").match(/\[\s*(D-\d{1,2})\s*\]/i);
-    return match ? normalizeCallsign(match[1]) : "";
-}
 
 app.get(
     "/api/leadership/reports-export.csv",
