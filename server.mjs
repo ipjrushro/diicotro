@@ -9094,23 +9094,13 @@ app.get(
 
             try {
 
-                const response =
-                    await axios.get(
-
-                        `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userId}`,
-
-                        {
-                            headers: {
-
-                                Authorization:
-                                    `Bot ${BOT_TOKEN}`
-                            }
-                        }
-                    );
-
-
+                // Folosește cache-ul comun Discord în loc de un request direct
+                // la fiecare click pe profil. Reduce rate-limit-urile și face
+                // profilurile celorlalți membri mult mai stabile pe Cloudflare.
                 member =
-                    response.data;
+                    await getDiscordMemberCached(
+                        userId
+                    );
 
             }
 
