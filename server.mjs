@@ -5043,29 +5043,93 @@ app.get(
 
 // ======================================================
 // TOATE RAPOARTELE - ADMIN
+// Cache stabil 5 minute: aceeași pagină/cursor primește același rezultat,
+// fără să recitim B2 la fiecare intrare în Administrare.
+// Dacă refresh-ul B2 eșuează, servim ultima variantă bună.
 // ======================================================
+
+const ADMIN_REPORTS_CACHE_TTL_MS = 5 * 60 * 1000;
+const adminReportsPageCache = new Map();
+const adminReportsInFlight = new Map();
+
+function adminReportsCacheKey(cursor, limit) {
+    return `${String(cursor || "__FIRST__")}::${String(limit || "40")}`;
+}
 
 app.get(
     "/api/admin/reports",
     requireAdmin,
     async (req, res) => {
         if (!ensureB2(res)) return;
+
+        const cursor = req.query.cursor || null;
+        const limit = req.query.limit;
+        const key = adminReportsCacheKey(cursor, limit);
+        const now = Date.now();
+        const cached = adminReportsPageCache.get(key);
+
+        // Cache proaspăt: răspundem imediat și nu atingem B2.
+        if (cached && (now - cached.savedAt) < ADMIN_REPORTS_CACHE_TTL_MS) {
+            res.setHeader("X-DIICOT-Reports-Cache", "HIT");
+            return res.json(cached.payload);
+        }
+
         try {
-            const page = await listB2ReportsPage(
-                null,
-                req.query.cursor || null,
-                req.query.limit
-            );
-            const reportsForClient = await withDirectB2ImageUrlsMany(page.reports);
-            res.json({
-                success: true,
-                reports: reportsForClient,
-                nextCursor: page.nextCursor,
-                hasMore: page.hasMore
+            // Dacă alt request actualizează exact aceeași pagină, îl așteptăm
+            // în loc să pornim încă o enumerare B2 în paralel.
+            let pending = adminReportsInFlight.get(key);
+
+            if (!pending) {
+                pending = (async () => {
+                    const page = await listB2ReportsPage(
+                        null,
+                        cursor,
+                        limit
+                    );
+
+                    const reportsForClient =
+                        await withDirectB2ImageUrlsMany(page.reports);
+
+                    return {
+                        success: true,
+                        reports: reportsForClient,
+                        nextCursor: page.nextCursor,
+                        hasMore: page.hasMore,
+                        cacheGeneratedAt: new Date().toISOString()
+                    };
+                })();
+
+                adminReportsInFlight.set(key, pending);
+            }
+
+            const payload = await pending;
+
+            adminReportsPageCache.set(key, {
+                savedAt: Date.now(),
+                payload
             });
-        } catch (error) {
+
+            res.setHeader("X-DIICOT-Reports-Cache", cached ? "REFRESH" : "MISS");
+            return res.json(payload);
+        }
+        catch (error) {
             console.error("Admin Reports Backblaze B2 Error:", error);
-            res.status(500).json({ error: "Rapoartele nu au putut fi încărcate." });
+
+            // Nu înlocuim ultima listă bună cu 0 / rezultat parțial.
+            if (cached?.payload) {
+                res.setHeader("X-DIICOT-Reports-Cache", "STALE");
+                return res.json({
+                    ...cached.payload,
+                    stale: true
+                });
+            }
+
+            return res.status(500).json({
+                error: "Rapoartele nu au putut fi încărcate."
+            });
+        }
+        finally {
+            adminReportsInFlight.delete(key);
         }
     }
 );
@@ -9094,13 +9158,23 @@ app.get(
 
             try {
 
-                // Folosește cache-ul comun Discord în loc de un request direct
-                // la fiecare click pe profil. Reduce rate-limit-urile și face
-                // profilurile celorlalți membri mult mai stabile pe Cloudflare.
-                member =
-                    await getDiscordMemberCached(
-                        userId
+                const response =
+                    await axios.get(
+
+                        `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userId}`,
+
+                        {
+                            headers: {
+
+                                Authorization:
+                                    `Bot ${BOT_TOKEN}`
+                            }
+                        }
                     );
+
+
+                member =
+                    response.data;
 
             }
 
@@ -9245,16 +9319,24 @@ app.get(
                 );
 
 
-            const reportsForClient =
-                await withDirectB2ImageUrlsMany(reports);
+            // IMPORTANT: profilul altui membru nu trebuie să semneze URL-urile
+            // imaginilor pentru TOATE rapoartele lui. La membri cu multe rapoarte,
+            // asta ținea endpointul /api/profile/:userId în "Se încarcă..." foarte mult.
+            // Dashboard-ul afișează doar activitatea recentă, deci semnăm doar ultimele 10.
+            const recentReports =
+                reports.slice(
+                    0,
+                    10
+                );
+
+            const recentReportsForClient =
+                await withDirectB2ImageUrlsMany(
+                    recentReports
+                );
 
 
             const recentActivity =
-                reportsForClient
-                    .slice(
-                        0,
-                        10
-                    )
+                recentReportsForClient
                     .map(
                         report => ({
 
@@ -9348,8 +9430,10 @@ app.get(
                                 : "-"
                     },
 
+                    // Pentru profilul read-only frontend-ul folosește recentActivity.
+                    // Nu mai trimitem toate rapoartele + toate URL-urile semnate.
                     reports:
-                        reportsForClient,
+                        recentReportsForClient,
 
                     recentActivity
                 }
