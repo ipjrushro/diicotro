@@ -22439,30 +22439,68 @@ const query =
 
     async function fetchAllReportPages(endpoint) {
         const allReports = [];
+        const seenIds = new Set();
         let cursor = null;
         let safety = 0;
 
         do {
             const url = new URL(endpoint, window.location.origin);
-            url.searchParams.set("limit", "40");
+            url.searchParams.set("limit", "20");
             if (cursor) url.searchParams.set("cursor", cursor);
 
-            const response = await fetch(url.pathname + url.search, {
-                credentials: "include",
-                cache: "no-store"
-            });
+            let data = null;
+            let lastError = null;
 
-            if (!response.ok) {
-                throw new Error("Rapoartele nu au putut fi încărcate.");
+            // Cloudflare/B2 poate avea ocazional un request eșuat. Reîncercăm pagina
+            // în loc să anulăm încărcarea tuturor rapoartelor.
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    const response = await fetch(url.pathname + url.search, {
+                        credentials: "include",
+                        cache: "no-store"
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(payload.error || `HTTP ${response.status}`);
+                    }
+
+                    data = payload;
+                    break;
+                } catch (error) {
+                    lastError = error;
+                    if (attempt < 3) {
+                        await new Promise(resolve => setTimeout(resolve, 350 * attempt));
+                    }
+                }
             }
 
-            const data = await response.json();
-            allReports.push(...(data.reports || []));
+            if (!data) {
+                // Dacă am încărcat deja pagini, le păstrăm în UI în loc să afișăm zero.
+                if (allReports.length) {
+                    console.warn("Încărcarea rapoartelor s-a oprit după o pagină B2 eșuată:", lastError);
+                    break;
+                }
+                throw lastError || new Error("Rapoartele nu au putut fi încărcate.");
+            }
+
+            for (const report of (data.reports || [])) {
+                const id = String(report?.id || `${report?.authorId || ""}-${report?.createdAt || ""}`);
+                if (!seenIds.has(id)) {
+                    seenIds.add(id);
+                    allReports.push(report);
+                }
+            }
+
             cursor = data.hasMore ? (data.nextCursor || null) : null;
             safety += 1;
-        } while (cursor && safety < 500);
+        } while (cursor && safety < 1000);
 
-        allReports.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        allReports.sort((a, b) =>
+            new Date(b.createdAt || b.created_at || 0) -
+            new Date(a.createdAt || a.created_at || 0)
+        );
+
         return allReports;
     }
 
