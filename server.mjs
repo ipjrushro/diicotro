@@ -9490,10 +9490,14 @@ app.get(
     "/api/profile/:userId/promotion-eligibility",
     requireAuth,
     async (req, res) => {
+        if (!ensureB2(res) || !ensureSupabase(res)) {
+            return;
+        }
+
         try {
             const userId = String(req.params.userId || "").trim();
 
-            if (!userId) {
+            if (!/^\d{17,20}$/.test(userId)) {
                 return res.status(400).json({
                     success: false,
                     error: "Discord ID invalid."
@@ -9502,22 +9506,57 @@ app.get(
 
             const member = await getDiscordMemberCached(userId);
 
-            if (!member) {
-                return res.status(404).json({
+            const roles =
+                Array.isArray(member?.roles)
+                    ? member.roles.map(String)
+                    : [];
+
+            // Folosim aceeași funcție de grad ca endpointul principal de profil.
+            const rank =
+                getHighestDIICOTRole(
+                    roles
+                );
+
+            if (!rank) {
+                return res.status(403).json({
                     success: false,
-                    error: "Membrul nu a fost găsit."
+                    error: "Utilizatorul nu are grad DIICOT."
                 });
             }
 
-            const rankInfo =
-                getHighestRankFromRoles(
-                    member.roles || []
+            // Luăm direct rapoartele membrului pentru progresul UP.
+            const ownReports = [];
+            let cursor = null;
+            let safety = 0;
+
+            do {
+                const page =
+                    await listB2ReportsPage(
+                        userId,
+                        cursor,
+                        B2_REPORTS_PAGE_SIZE
+                    );
+
+                ownReports.push(
+                    ...(Array.isArray(page.reports) ? page.reports : [])
                 );
+
+                cursor =
+                    page.hasMore
+                        ? (page.nextCursor || null)
+                        : null;
+
+                safety += 1;
+            }
+            while (cursor && safety < 1000);
+
+            sortB2Reports(ownReports);
 
             const promotionEligibility =
                 await buildPromotionEligibility(
                     userId,
-                    rankInfo
+                    rank,
+                    ownReports
                 );
 
             return res.json({
@@ -9526,7 +9565,12 @@ app.get(
             });
         }
         catch (error) {
-            console.error("Profile promotion eligibility error:", error);
+            console.error(
+                "Profile promotion eligibility error:",
+                error?.response?.data ||
+                error?.message ||
+                error
+            );
 
             return res.status(500).json({
                 success: false,
