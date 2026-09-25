@@ -13845,6 +13845,13 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                         <strong id="admin-total">
                             0
                         </strong>
+                                <button type="button"
+                                    id="admin-refresh-reports"
+                                    class="btn-secondary"
+                                    style="margin-left:12px;padding:9px 13px;cursor:pointer;"
+                                    onclick="refreshAdminReportsNow()">
+                                    ↻ ACTUALIZEAZĂ RAPOARTELE
+                                </button>
 
                     </div>
 
@@ -22446,7 +22453,10 @@ const query =
         do {
             const url = new URL(endpoint, window.location.origin);
             url.searchParams.set("limit", "20");
-            if (cursor) url.searchParams.set("cursor", cursor);
+            if (cursor) {
+                url.searchParams.set("cursor", cursor);
+                url.searchParams.delete("refresh");
+            }
 
             let data = null;
             let lastError = null;
@@ -23037,7 +23047,9 @@ const query =
             try {
                 const reports =
                     await fetchAllReportPages(
-                        "/api/admin/reports"
+                        forceRefresh
+                            ? "/api/admin/reports?refresh=1"
+                            : "/api/admin/reports"
                     );
 
                 // Schimbăm UI-ul NUMAI după ce avem lista completă.
@@ -23084,6 +23096,40 @@ const query =
         })();
 
         return adminReportsLoadPromise;
+    }
+
+
+
+    async function refreshAdminReportsNow() {
+        const button = document.getElementById("admin-refresh-reports");
+        const normalText = "↻ ACTUALIZEAZĂ RAPOARTELE";
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "SE ACTUALIZEAZĂ...";
+        }
+
+        try {
+            if (typeof adminReportsUiCache !== "undefined") {
+                adminReportsUiCache.savedAt = 0;
+            }
+
+            await loadAdminReports(true);
+
+            if (button) {
+                button.textContent = "✓ RAPOARTE ACTUALIZATE";
+                setTimeout(() => {
+                    button.textContent = normalText;
+                }, 1800);
+            }
+        }
+        catch (error) {
+            console.error("Manual reports refresh:", error);
+            if (button) button.textContent = "EROARE — ÎNCEARCĂ DIN NOU";
+        }
+        finally {
+            if (button) button.disabled = false;
+        }
     }
 
 
@@ -24087,6 +24133,53 @@ const query =
             profile
         );
 
+    }
+
+
+
+    async function loadViewedProfilePromotionEligibility(userId) {
+        if (!userId) {
+            renderProfilePromotionEligibility(null);
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `/api/profile/${encodeURIComponent(userId)}/promotion-eligibility`,
+                {
+                    credentials: "include",
+                    cache: "no-store"
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.error ||
+                    "Eligibilitatea UP nu a putut fi calculată."
+                );
+            }
+
+            if (
+                viewedProfileData &&
+                String(viewedProfileData.id || "") !== String(userId)
+            ) {
+                return;
+            }
+
+            renderProfilePromotionEligibility(
+                data.promotionEligibility
+            );
+        }
+        catch (error) {
+            console.error(
+                "loadViewedProfilePromotionEligibility:",
+                error
+            );
+
+            renderProfilePromotionEligibility(null);
+        }
     }
 
 
