@@ -13846,14 +13846,6 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                             0
                         </strong>
 
-                                <button type="button"
-                                    id="admin-refresh-reports"
-                                    class="btn-secondary"
-                                    style="margin-left:12px;padding:9px 13px;cursor:pointer;"
-                                    onclick="refreshAdminReportsNow()">
-                                    ↻ ACTUALIZEAZĂ RAPOARTELE
-                                </button>
-
                     </div>
 
 
@@ -22456,12 +22448,6 @@ const query =
             url.searchParams.set("limit", "20");
             if (cursor) url.searchParams.set("cursor", cursor);
 
-            // refresh=1 trebuie trimis doar la prima pagină; după aceea continuăm
-            // snapshot-ul nou folosind cursorul primit.
-            if (cursor) {
-                url.searchParams.delete("refresh");
-            }
-
             let data = null;
             let lastError = null;
 
@@ -23051,9 +23037,7 @@ const query =
             try {
                 const reports =
                     await fetchAllReportPages(
-                        forceRefresh
-                            ? "/api/admin/reports?refresh=1"
-                            : "/api/admin/reports"
+                        "/api/admin/reports"
                     );
 
                 // Schimbăm UI-ul NUMAI după ce avem lista completă.
@@ -23100,36 +23084,6 @@ const query =
         })();
 
         return adminReportsLoadPromise;
-    }
-
-    async function refreshAdminReportsNow() {
-        const button = document.getElementById("admin-refresh-reports");
-        const oldText = button?.textContent || "↻ ACTUALIZEAZĂ RAPOARTELE";
-
-        if (button) {
-            button.disabled = true;
-            button.textContent = "SE ACTUALIZEAZĂ...";
-        }
-
-        try {
-            // Forțăm o listă nouă doar la cererea conducerii.
-            adminReportsUiCache.savedAt = 0;
-            await loadAdminReports(true);
-
-            if (button) {
-                button.textContent = "✓ RAPOARTE ACTUALIZATE";
-                setTimeout(() => {
-                    button.textContent = oldText;
-                }, 1800);
-            }
-        }
-        catch (error) {
-            console.error("Manual reports refresh:", error);
-            if (button) button.textContent = "EROARE — ÎNCEARCĂ DIN NOU";
-        }
-        finally {
-            if (button) button.disabled = false;
-        }
     }
 
 
@@ -23607,27 +23561,18 @@ const query =
 
         try {
 
-            const controller = new AbortController();
-            const timeoutId = setTimeout(
-                () => controller.abort(),
-                15000
-            );
-
-            let response;
-
-            try {
-                response = await fetch(
+            const response =
+                await fetch(
                     `/api/profile/${encodeURIComponent(userId)}`,
                     {
-                        credentials: "include",
-                        cache: "no-store",
-                        signal: controller.signal
+                        credentials:
+                            "include",
+
+                        cache:
+                            "no-store"
                     }
                 );
-            }
-            finally {
-                clearTimeout(timeoutId);
-            }
+
 
             const data =
                 await response.json();
@@ -23666,11 +23611,7 @@ const query =
                 activity.innerHTML = `
 
                     <div class="empty-state">
-                        ${escapeHTML(
-                            error?.name === "AbortError"
-                                ? "Profilul a răspuns prea greu. Încearcă din nou."
-                                : (error.message || "Profilul nu a putut fi încărcat.")
-                        )}
+                        ${escapeHTML(error.message)}
                     </div>
                 `;
             }
@@ -23967,11 +23908,14 @@ const query =
 
 
         const activity =
-            Array.isArray(
-                profile.recentActivity
-            )
+            Array.isArray(profile.recentActivity) &&
+            profile.recentActivity.length
                 ? profile.recentActivity
-                : [];
+                : (
+                    Array.isArray(profile.reports)
+                        ? profile.reports
+                        : []
+                );
 
 
         const avatar =
