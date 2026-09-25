@@ -5064,12 +5064,17 @@ app.get(
 
         const cursor = req.query.cursor || null;
         const limit = req.query.limit;
+        const forceRefresh = String(req.query.refresh || "") === "1";
         const key = adminReportsCacheKey(cursor, limit);
         const now = Date.now();
         const cached = adminReportsPageCache.get(key);
 
+        if (forceRefresh && !cursor) {
+            adminReportsPageCache.clear();
+        }
+
         // Cache proaspăt: răspundem imediat și nu atingem B2.
-        if (cached && (now - cached.savedAt) < ADMIN_REPORTS_CACHE_TTL_MS) {
+        if (!forceRefresh && cached && (now - cached.savedAt) < ADMIN_REPORTS_CACHE_TTL_MS) {
             res.setHeader("X-DIICOT-Reports-Cache", "HIT");
             return res.json(cached.payload);
         }
@@ -9294,8 +9299,6 @@ app.get(
 
                     : [];
 
-            // Profil membru: citim direct rapoartele acelui utilizator din B2.
-            // Asta evită cache-ul global cu toate rapoartele, care putea rămâne gol/parțial.
             const reports = [];
             let reportsCursor = null;
             let reportsSafety = 0;
@@ -9334,7 +9337,6 @@ app.get(
                 ).length;
 
 
-            // Eligibilitatea UP nu trebuie să blocheze încărcarea profilului.
             const promotionEligibility = null;
 
 
@@ -9475,6 +9477,61 @@ app.get(
                     error:
                         "Profilul membrului nu a putut fi încărcat."
                 });
+        }
+    }
+);
+
+
+
+// ======================================================
+// ELIGIBILITATE UP - PROFIL MEMBRU
+// ======================================================
+app.get(
+    "/api/profile/:userId/promotion-eligibility",
+    requireAuth,
+    async (req, res) => {
+        try {
+            const userId = String(req.params.userId || "").trim();
+
+            if (!userId) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Discord ID invalid."
+                });
+            }
+
+            const member = await getDiscordMemberCached(userId);
+
+            if (!member) {
+                return res.status(404).json({
+                    success: false,
+                    error: "Membrul nu a fost găsit."
+                });
+            }
+
+            const rankInfo =
+                getHighestRankFromRoles(
+                    member.roles || []
+                );
+
+            const promotionEligibility =
+                await buildPromotionEligibility(
+                    userId,
+                    rankInfo
+                );
+
+            return res.json({
+                success: true,
+                promotionEligibility
+            });
+        }
+        catch (error) {
+            console.error("Profile promotion eligibility error:", error);
+
+            return res.status(500).json({
+                success: false,
+                error: "Eligibilitatea UP nu a putut fi calculată."
+            });
         }
     }
 );
