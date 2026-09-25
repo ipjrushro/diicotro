@@ -5064,12 +5064,17 @@ app.get(
 
         const cursor = req.query.cursor || null;
         const limit = req.query.limit;
+        const forceRefresh = String(req.query.refresh || "") === "1";
         const key = adminReportsCacheKey(cursor, limit);
         const now = Date.now();
         const cached = adminReportsPageCache.get(key);
 
+        if (forceRefresh && !cursor) {
+            adminReportsPageCache.clear();
+        }
+
         // Cache proaspăt: răspundem imediat și nu atingem B2.
-        if (cached && (now - cached.savedAt) < ADMIN_REPORTS_CACHE_TTL_MS) {
+        if (!forceRefresh && cached && (now - cached.savedAt) < ADMIN_REPORTS_CACHE_TTL_MS) {
             res.setHeader("X-DIICOT-Reports-Cache", "HIT");
             return res.json(cached.payload);
         }
@@ -9155,45 +9160,15 @@ app.get(
 
             let member;
 
-
             try {
-
-                const response =
-                    await axios.get(
-
-                        `https://discord.com/api/v10/guilds/${GUILD_ID}/members/${userId}`,
-
-                        {
-                            headers: {
-
-                                Authorization:
-                                    `Bot ${BOT_TOKEN}`
-                            }
-                        }
-                    );
-
-
-                member =
-                    response.data;
-
+                member = await getDiscordMemberCached(userId);
             }
-
             catch (error) {
-
-                if (
-                    error.response?.status ===
-                    404
-                ) {
-
-                    return res
-                        .status(404)
-                        .json({
-                            error:
-                                "Membrul nu a fost găsit pe serverul Discord."
-                        });
+                if (Number(error?.response?.status) === 404) {
+                    return res.status(404).json({
+                        error: "Membrul nu a fost găsit pe serverul Discord."
+                    });
                 }
-
-
                 throw error;
             }
 
@@ -9311,12 +9286,9 @@ app.get(
                 ).length;
 
 
-            const promotionEligibility =
-                await buildPromotionEligibility(
-                    userId,
-                    rank,
-                    reports
-                );
+            // Nu blocăm profilul read-only cu scanarea completă pentru eligibilitate UP.
+            // Aceasta poate enumera din nou toate rapoartele B2 pentru anumite grade.
+            const promotionEligibility = null;
 
 
             // IMPORTANT: profilul altui membru nu trebuie să semneze URL-urile
