@@ -11218,6 +11218,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 @media(max-width:560px){.transfer-profile-strip,.transfer-row-main{grid-template-columns:1fr}.transfer-case-hero{grid-template-columns:1fr}.transfer-leadership-head{align-items:flex-start;flex-direction:column}}
 
 </style>
+    <link rel="preconnect" href="https://cdn.discordapp.com" crossorigin>
 </head>
 
 
@@ -11237,7 +11238,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
         <div class="sidebar-brand">
 
 
-            <img
+            <img loading="lazy" decoding="async"
                 src="/uploads/diicot-logo.png"
                 alt="DIICOT"
                 class="diicot-logo"
@@ -11521,7 +11522,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 
                 <div class="v8-user-wrap">
                     <button type="button" class="user-menu v5-user-menu v8-user-trigger" id="v8-user-trigger">
-                        <img id="dashboard-avatar" class="user-avatar" alt="Avatar">
+                        <img loading="lazy" decoding="async" id="dashboard-avatar" class="user-avatar" alt="Avatar">
                         <div class="user-info">
                             <strong id="dashboard-name">Se încarcă...</strong>
                             <span id="dashboard-rank">-</span>
@@ -11856,7 +11857,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
             <section id="rank-responsibilities" class="dashboard-section">
                 <div class="rr-page">
                     <header class="rr-hero">
-                        <img class="rr-hero-logo" src="/uploads/diicot-logo.png" alt="DIICOT">
+                        <img loading="lazy" decoding="async" class="rr-hero-logo" src="/uploads/diicot-logo.png" alt="DIICOT">
                         <div><div class="rr-kicker">Ministerul Afacerilor Interne • D.I.I.C.O.T</div><h2>Responsabilități grade</h2><p>Fiecare grad are atribuții și responsabilități clare. Cunoașterea lor este obligatorie și stă la baza evaluărilor, colaborării și promovărilor.</p></div>
                     </header>
                     <div class="rr-layout">
@@ -12514,7 +12515,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                                     style="display:none;"
                                 >
                                     <div>
-                                        <img
+                                        <img loading="lazy" decoding="async"
                                             id="report-organizer-selected-avatar"
                                             alt="Avatar"
                                         >
@@ -13556,7 +13557,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                                 <div class="discord-preview-author">
 
 
-                                    <img
+                                    <img loading="lazy" decoding="async"
                                         id="announcement-preview-avatar"
                                         src="https://cdn.discordapp.com/embed/avatars/0.png"
                                         alt="Avatar"
@@ -14085,7 +14086,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 
                         <div class="profile-v4-avatar-wrap">
                             <div class="profile-v4-avatar-ring">
-                                <img
+                                <img loading="lazy" decoding="async"
                                     id="profile-avatar"
                                     class="profile-avatar"
                                     src="https://cdn.discordapp.com/embed/avatars/0.png"
@@ -21907,7 +21908,7 @@ const query =
                             }"
                             data-report-organizer-id="${escapeHTML(member.id)}"
                         >
-                            <img
+                            <img loading="lazy" decoding="async"
                                 src="${escapeHTML(member.avatar || "")}"
                                 alt="Avatar"
                             >
@@ -22834,7 +22835,7 @@ const query =
                                 ${
                                     report.coOrganizer.avatar
                                         ? `
-                                            <img
+                                            <img loading="lazy" decoding="async"
                                                 src="${escapeHTML(report.coOrganizer.avatar)}"
                                                 alt="Avatar organizator"
                                             >
@@ -23268,7 +23269,7 @@ const query =
                                                         tabindex="0"
                                                     >
 
-                                                        <img
+                                                        <img loading="lazy" decoding="async"
                                                             class="personnel-avatar"
                                                             src="${escapeHTML(
                                                                 getAvatarURL(
@@ -33517,6 +33518,98 @@ const query =
 </div>
 
 <script>
+    // =========================================================
+    // DIICOT SMART FETCH
+    // Deduplică GET-urile identice și păstrează răspunsurile scurt în memorie.
+    // POST/PUT/DELETE nu sunt cache-uite.
+    // =========================================================
+    const __nativeFetch = window.fetch.bind(window);
+    const __diicotGetCache = new Map();
+    const __diicotInflight = new Map();
+
+    window.diicotSmartFetch = async function(input, init = {}) {
+        const method = String(init?.method || "GET").toUpperCase();
+
+        if (method !== "GET") {
+            return __nativeFetch(input, init);
+        }
+
+        const url =
+            typeof input === "string"
+                ? input
+                : (input?.url || String(input));
+
+        // Nu cache-uim request-uri care cer explicit refresh/no-store.
+        const bypass =
+            init?.cache === "no-store" ||
+            /[?&](refresh|force)=1(?:&|$)/.test(url);
+
+        if (bypass) {
+            return __nativeFetch(input, init);
+        }
+
+        const key = `${method}:${url}`;
+        const now = Date.now();
+        const cached = __diicotGetCache.get(key);
+
+        if (cached && cached.expiresAt > now) {
+            return new Response(cached.body, {
+                status: cached.status,
+                statusText: cached.statusText,
+                headers: new Headers(cached.headers)
+            });
+        }
+
+        if (__diicotInflight.has(key)) {
+            const snapshot = await __diicotInflight.get(key);
+            return new Response(snapshot.body, {
+                status: snapshot.status,
+                statusText: snapshot.statusText,
+                headers: new Headers(snapshot.headers)
+            });
+        }
+
+        const pending = (async () => {
+            const response = await __nativeFetch(input, init);
+            const body = await response.clone().arrayBuffer();
+            const snapshot = {
+                body,
+                status: response.status,
+                statusText: response.statusText,
+                headers: Array.from(response.headers.entries())
+            };
+
+            if (response.ok) {
+                // 30 secunde: suficient ca navigarea înainte/înapoi să fie instant.
+                __diicotGetCache.set(key, {
+                    ...snapshot,
+                    expiresAt: Date.now() + 30_000
+                });
+            }
+
+            return snapshot;
+        })();
+
+        __diicotInflight.set(key, pending);
+
+        try {
+            const snapshot = await pending;
+            return new Response(snapshot.body, {
+                status: snapshot.status,
+                statusText: snapshot.statusText,
+                headers: new Headers(snapshot.headers)
+            });
+        }
+        finally {
+            __diicotInflight.delete(key);
+        }
+    };
+
+    // Folosim wrapper-ul pentru fetch-urile dashboard-ului.
+    window.fetch = window.diicotSmartFetch;
+
+    // La revenirea în tab nu forțăm reload-uri; cache-ul scurt permite UI instant.
+
 (function(){
   const TRANSFER_API_BASE = "";
   const TRANSFER_SOURCE = "DIICOT";
