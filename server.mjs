@@ -127,6 +127,15 @@ const PORT = process.env.PORT || 3000;
 app.set("etag", "strong");
 
 
+// Cache scurt în browser pentru endpoint-uri GET autentificate.
+// Reduce navigările repetate fără să expună datele într-un cache public.
+function setPrivateApiCache(res, seconds = 30) {
+    res.setHeader(
+        "Cache-Control",
+        `private, max-age=${Math.max(0, Number(seconds) || 0)}, stale-while-revalidate=60`
+    );
+}
+
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
@@ -410,8 +419,8 @@ function discordMemberAvatar(user = {}) {
 // Evită zeci de request-uri identice către Discord.
 // ======================================================
 
-const DISCORD_MEMBER_CACHE_TTL_MS = 5 * 60 * 1000;
-const DISCORD_GUILD_CACHE_TTL_MS = 5 * 60 * 1000;
+const DISCORD_MEMBER_CACHE_TTL_MS = 10 * 60 * 1000;
+const DISCORD_GUILD_CACHE_TTL_MS = 10 * 60 * 1000;
 
 const discordMemberCache =
     new Map();
@@ -2000,7 +2009,7 @@ async function readB2JSON(key) {
 // ======================================================
 
 const B2_REPORT_CACHE_TTL_MS =
-    60 * 1000; // 1 minut - sincronizare rapidă cu rapoartele publicate pe Render
+    10 * 60 * 1000; // 10 minute; rapoartele noi actualizează cache-ul imediat
 
 let b2ReportCache = {
     reports: [],
@@ -5020,6 +5029,7 @@ app.get(
     "/api/reports/my",
     requireAuth,
     async (req, res) => {
+        setPrivateApiCache(res, 30);
         if (!ensureB2(res)) return;
         try {
             const page = await listB2ReportsPage(
@@ -5048,7 +5058,7 @@ app.get(
 // Dacă refresh-ul B2 eșuează, servim ultima variantă bună.
 // ======================================================
 
-const ADMIN_REPORTS_CACHE_TTL_MS = 5 * 60 * 1000;
+const ADMIN_REPORTS_CACHE_TTL_MS = 10 * 60 * 1000;
 const adminReportsPageCache = new Map();
 const adminReportsInFlight = new Map();
 
@@ -5060,6 +5070,7 @@ app.get(
     "/api/admin/reports",
     requireAdmin,
     async (req, res) => {
+        setPrivateApiCache(res, 45);
         if (!ensureB2(res)) return;
 
         const cursor = req.query.cursor || null;
