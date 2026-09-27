@@ -11229,6 +11229,38 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 
 </style>
     <link rel="preconnect" href="https://cdn.discordapp.com" crossorigin>
+
+<style id="docs-render-match-v1">
+/* DOCS Cloudflare — aspect apropiat de versiunea Render */
+#docs .section-title { margin-bottom: 22px; }
+#docs .section-title span { color:#d9a72d!important; letter-spacing:1.7px; font-weight:900; }
+#docs .section-title h2 { color:#f2f5f9; font-size:28px!important; letter-spacing:-.8px; }
+#docs .docs-render-hero { display:grid; grid-template-columns:2.15fr 1.08fr 1.08fr 1.08fr; gap:12px; margin-bottom:18px; }
+#docs .docs-render-intro, #docs .docs-render-stat { border:1px solid rgba(92,132,178,.27); border-radius:14px; background:linear-gradient(145deg,rgba(21,39,59,.97),rgba(10,25,43,.97)); box-shadow:0 18px 45px rgba(0,0,0,.14); }
+#docs .docs-render-intro { padding:22px 24px; background:linear-gradient(135deg,rgba(33,49,63,.98),rgba(24,36,48,.98)); }
+#docs .docs-render-intro>span, #docs .docs-render-stat>span { display:block; color:#f0b52f; font-size:10px!important; font-weight:950; letter-spacing:1.5px; }
+#docs .docs-render-intro h3 { margin:12px 0 8px; font-size:24px; color:#f5f7fb; letter-spacing:-.6px; }
+#docs .docs-render-intro p { margin:0; color:#aab8c9; font-size:11px!important; }
+#docs .docs-render-stat { min-height:128px; padding:21px 18px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; }
+#docs .docs-render-stat strong { margin-top:10px; color:#f4f7fb; font-size:31px; line-height:1; letter-spacing:-1px; }
+#docs .docs-render-stat small { margin-top:7px; color:#778ca5; font-size:10px!important; }
+#docs .docs-toolbar { padding:17px 16px; margin-bottom:12px; border:1px solid rgba(92,132,178,.22); border-radius:13px; background:rgba(12,29,49,.92); }
+#docs .docs-search { width:min(430px,100%); min-height:46px; border-radius:9px; background:#071321; border:1px solid rgba(95,127,163,.18); }
+#docs #docs-count { min-height:38px; padding:6px 11px; border-radius:7px; background:rgba(12,31,52,.9); border:1px solid rgba(95,127,163,.15); }
+#docs .docs-toolbar-right .primary-btn { min-height:43px; border-radius:8px; font-weight:950; letter-spacing:.15px; }
+#docs #docs-sync-btn, #docs #docs-save-all-btn, #docs #docs-add-btn { background:linear-gradient(135deg,#18bfae,#159e9b)!important; border-color:rgba(71,235,215,.35)!important; color:#fff!important; }
+#docs #docs-admin-badge { min-height:40px; border-radius:7px; padding:0 12px; background:rgba(207,153,29,.08); border-color:rgba(230,174,47,.45); }
+#docs .docs-table-panel { border:1px solid rgba(92,132,178,.22); border-radius:14px; background:#081827; }
+#docs .docs-table { min-width:1580px; }
+#docs .docs-table th { background:#142b47!important; color:#7595bd!important; border-bottom-color:rgba(114,153,198,.2)!important; }
+#docs .docs-table td { background:#071827!important; }
+#docs .docs-table tbody tr:nth-child(even) td { background:#0a2136!important; }
+#docs .docs-table tbody tr:hover td { background:#102b45!important; }
+#docs .docs-row-input,#docs .docs-row-select,#docs .docs-row-textarea { background:#061321!important; border-color:rgba(91,129,170,.16)!important; border-radius:7px!important; }
+#docs .docs-mini-btn.delete { border-color:rgba(255,73,73,.5)!important; color:#ff6e6e!important; }
+@media(max-width:1100px){#docs .docs-render-hero{grid-template-columns:1fr 1fr 1fr}#docs .docs-render-intro{grid-column:1/-1}}
+@media(max-width:720px){#docs .docs-render-hero{grid-template-columns:1fr}#docs .docs-render-intro{grid-column:auto}}
+</style>
 </head>
 
 
@@ -13030,6 +13062,16 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 
                 </div>
 
+                <div class="docs-render-hero">
+                    <div class="docs-render-intro">
+                        <span>CENTRU DE EVIDENȚĂ • DIICOT</span>
+                        <h3>Personal într-un singur registru.</h3>
+                        <p>Call sign-urile D-01 – D-99 sunt așezate automat după nickname-ul Discord. Mutările eliberează slotul vechi.</p>
+                    </div>
+                    <div class="docs-render-stat"><span>SLOTURI</span><strong id="docs-stat-slots">99</strong><small>D-01 — D-99</small></div>
+                    <div class="docs-render-stat"><span>OCUPATE</span><strong id="docs-stat-occupied">0</strong><small>membri sincronizați</small></div>
+                    <div class="docs-render-stat"><span>LIBERE</span><strong id="docs-stat-free">99</strong><small>disponibile</small></div>
+                </div>
 
                 <div class="docs-toolbar">
 
@@ -13068,7 +13110,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                             id="docs-sync-btn"
                             class="primary-btn gold-btn admin-only"
                         >
-                            SINCRONIZEAZĂ PERSONAL
+                            SINCRONIZEAZĂ PERSONAL + CALL SIGN
                         </button>
 
                         <button
@@ -13076,7 +13118,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                             id="docs-save-all-btn"
                             class="primary-btn gold-btn admin-only"
                         >
-                            SALVEAZĂ MODIFICĂRILE
+                            TOTUL ESTE SALVAT
                         </button>
 
                         <button
@@ -17604,6 +17646,20 @@ const query =
             count.textContent =
                 String(filtered.length);
         }
+
+        // Cardurile DOCS în stilul versiunii Render. Ocupat = slot cu membru activ/sincronizat.
+        const occupiedDocs = docsRows.filter(row => {
+            const callsign = String(row?.callsign || "").trim();
+            const hasIdentity = Boolean(String(row?.fullName || "").trim() || String(row?.discord || "").trim() || String(row?.internalId || "").trim());
+            return /^D-(?:0?[1-9]|[1-9]\d)$/.test(callsign) && hasIdentity;
+        }).length;
+        const slotsDocs = 99;
+        const occupiedEl = document.getElementById("docs-stat-occupied");
+        const freeEl = document.getElementById("docs-stat-free");
+        const slotsEl = document.getElementById("docs-stat-slots");
+        if (occupiedEl) occupiedEl.textContent = String(occupiedDocs);
+        if (freeEl) freeEl.textContent = String(Math.max(0, slotsDocs - occupiedDocs));
+        if (slotsEl) slotsEl.textContent = String(slotsDocs);
 
         if (!filtered.length) {
 
