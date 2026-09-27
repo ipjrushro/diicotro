@@ -1129,27 +1129,34 @@ async function buildPromotionEligibility(
             const userIdString =
                 String(userId);
 
+            // Raziile si antrenamentele trebuie sa reflecte TOATE activitatile
+            // organizate de membru (autor sau al doilea organizator), la fel cum
+            // RAPOARTE afiseaza toate rapoartele existente. Nu filtram dupa
+            // rank_since: acel rand poate fi creat/resetat mai tarziu si ar face
+            // activitatile vechi sa dispara din profil.
             const involvedReports =
                 allReports.filter(
                     report => {
-                        if (
-                            getReportTimestamp(
-                                report
-                            ) < validSince
-                        ) {
-                            return false;
-                        }
-
                         const isAuthor =
                             String(
                                 report.authorId ||
+                                report.author_id ||
                                 ""
                             ) ===
                             userIdString;
 
+                        const coOrganizer =
+                            report.coOrganizer ||
+                            report.co_organizer ||
+                            null;
+
                         const isCoOrganizer =
                             String(
-                                report.coOrganizer?.id ||
+                                coOrganizer?.id ||
+                                coOrganizer?.userId ||
+                                coOrganizer?.user_id ||
+                                coOrganizer?.discordId ||
+                                coOrganizer?.discord_id ||
                                 ""
                             ) ===
                             userIdString;
@@ -1164,14 +1171,18 @@ async function buildPromotionEligibility(
             raids =
                 involvedReports.filter(
                     report =>
-                        report.type ===
+                        String(report.type || "")
+                            .trim()
+                            .toUpperCase() ===
                         "RAZIE"
                 ).length;
 
             trainings =
                 involvedReports.filter(
                     report =>
-                        report.type ===
+                        String(report.type || "")
+                            .trim()
+                            .toUpperCase() ===
                         "ANTRENAMENT"
                 ).length;
 
