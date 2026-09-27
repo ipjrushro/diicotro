@@ -8794,6 +8794,16 @@
         .meeting-cancel{margin-left:10px;border:1px solid rgba(255,83,83,.25);background:rgba(255,83,83,.08);color:#ff8585;border-radius:6px;padding:6px 9px;cursor:pointer;font-size:8px;font-weight:900}
         @media(max-width:800px){.meeting-attendance-grid{grid-template-columns:1fr}}
 
+
+        #leadership-export-btn {
+            appearance: none;
+            font: inherit;
+            cursor: pointer;
+        }
+        #leadership-export-btn:disabled {
+            cursor: wait;
+            opacity: .72;
+        }
 </style>
 
 <style id="sanction-premium-styles">
@@ -13438,10 +13448,10 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                         <h3>Activitatea întregului personal DIICOT</h3>
                         <p>Descarcă lista personalului în format Notepad: CALL SIGN, NUME, ID, RAPOARTE și, de la Sub Inspector în sus, RAZII + ANTRENAMENTE.</p>
                     </div>
-                    <a class="leadership-export-btn" href="/api/leadership/reports-export.txt" download>
-                        <span>DESCARCĂ FIȘIERUL</span>
+                    <button class="leadership-export-btn" id="leadership-export-btn" type="button">
+                        <span id="leadership-export-label">DESCARCĂ FIȘIERUL</span>
                         <b>TXT</b>
-                    </a>
+                    </button>
                 </div>
 
 
@@ -33609,6 +33619,237 @@ const query =
     window.fetch = window.diicotSmartFetch;
 
     // La revenirea în tab nu forțăm reload-uri; cache-ul scurt permite UI instant.
+
+    // =========================================================
+    // EXPORT ACTIVITATE DIICOT — Cloudflare safe
+    // Nu cere toate cele 1000+ JSON-uri B2 într-o singură invocare Worker.
+    // Citește paginat prin /api/admin/reports și construiește TXT-ul în browser.
+    // =========================================================
+    async function downloadLeadershipActivityTxt() {
+        const button = document.getElementById("leadership-export-btn");
+        const label = document.getElementById("leadership-export-label");
+        if (!button || button.dataset.loading === "1") return;
+
+        button.dataset.loading = "1";
+        button.disabled = true;
+        const originalLabel = label?.textContent || "DESCARCĂ FIȘIERUL";
+
+        try {
+            if (label) label.textContent = "PREGĂTESC PERSONALUL...";
+
+            const personnelResponse = await fetch("/api/personnel", {
+                credentials: "same-origin"
+            });
+
+            if (!personnelResponse.ok) {
+                throw new Error(`Personal DIICOT: HTTP ${personnelResponse.status}`);
+            }
+
+            const personnelPayload = await personnelResponse.json();
+            const personnel = Array.isArray(personnelPayload?.personnel)
+                ? personnelPayload.personnel
+                : [];
+
+            const allReports = [];
+            let cursor = null;
+            let page = 0;
+
+            do {
+                page += 1;
+                if (label) {
+                    label.textContent =
+                        `ÎNCARC RAPOARTE... ${allReports.length}`;
+                }
+
+                const params = new URLSearchParams();
+                params.set("limit", "20");
+                if (cursor) params.set("cursor", cursor);
+
+                const reportsResponse = await fetch(
+                    `/api/admin/reports?${params.toString()}`,
+                    {
+                        credentials: "same-origin"
+                    }
+                );
+
+                if (!reportsResponse.ok) {
+                    let detail = "";
+                    try {
+                        const body = await reportsResponse.json();
+                        detail = body?.error ? ` — ${body.error}` : "";
+                    } catch {}
+                    throw new Error(
+                        `Rapoarte: HTTP ${reportsResponse.status}${detail}`
+                    );
+                }
+
+                const payload = await reportsResponse.json();
+                const rows = Array.isArray(payload?.reports)
+                    ? payload.reports
+                    : [];
+
+                allReports.push(...rows);
+
+                cursor =
+                    payload?.hasMore && payload?.nextCursor
+                        ? String(payload.nextCursor)
+                        : null;
+
+                // Cedăm puțin browserului între pagini ca UI-ul să rămână fluid.
+                if (cursor) {
+                    await new Promise(resolve => setTimeout(resolve, 20));
+                }
+
+                // Protecție împotriva unui cursor defect care ar bucla la infinit.
+                if (page > 500) {
+                    throw new Error("Exportul a fost oprit: prea multe pagini.");
+                }
+            } while (cursor);
+
+            if (label) label.textContent = "GENEREZ TXT...";
+
+            const activityByUser = new Map();
+
+            for (const report of allReports) {
+                const userId = String(
+                    report?.authorId ||
+                    report?.userId ||
+                    report?.discordId ||
+                    ""
+                ).trim();
+
+                if (!userId) continue;
+
+                if (!activityByUser.has(userId)) {
+                    activityByUser.set(userId, {
+                        reports: 0,
+                        raids: 0,
+                        trainings: 0
+                    });
+                }
+
+                const stats = activityByUser.get(userId);
+                const type = String(report?.type || "")
+                    .trim()
+                    .toUpperCase();
+
+                if (type === "RAZIE") stats.raids += 1;
+                else if (type === "ANTRENAMENT") stats.trainings += 1;
+                else stats.reports += 1;
+            }
+
+            function extractCallsign(displayName) {
+                const value = String(displayName || "").trim();
+                const match = value.match(
+                    /(?:^|\[|\s)((?:D\s*-\s*)?\d{1,3})(?:\]|\s|$)/i
+                );
+                if (!match) return "FĂRĂ CALLSIGN";
+                let code = String(match[1]).replace(/\s+/g, "").toUpperCase();
+                if (/^\d+$/.test(code)) code = `D-${code}`;
+                if (/^D\d+$/.test(code)) code = code.replace(/^D/, "D-");
+                return code;
+            }
+
+            function removeCallsign(displayName) {
+                return String(displayName || "")
+                    .replace(/\[\s*D?\s*-?\s*\d{1,3}\s*\]/i, " ")
+                    .replace(/^\s*D?\s*-\s*\d{1,3}\s*/i, " ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+            }
+
+            const sortedPersonnel = [...personnel].sort((a, b) => {
+                const ca = extractCallsign(a?.displayName);
+                const cb = extractCallsign(b?.displayName);
+                return ca.localeCompare(cb, "ro", { numeric: true }) ||
+                    String(a?.displayName || "").localeCompare(
+                        String(b?.displayName || ""),
+                        "ro"
+                    );
+            });
+
+            const lines = sortedPersonnel.map(member => {
+                const stats = activityByUser.get(String(member?.id || "")) || {
+                    reports: 0,
+                    raids: 0,
+                    trainings: 0
+                };
+
+                const callsign = extractCallsign(member?.displayName);
+                const withoutCallsign = removeCallsign(
+                    member?.displayName ||
+                    member?.username ||
+                    "Necunoscut"
+                );
+
+                const idMatch = withoutCallsign.match(/\b(\d{1,8})\b\s*$/);
+                const internalId = idMatch ? idMatch[1] : "";
+                const cleanName = internalId
+                    ? withoutCallsign
+                        .replace(new RegExp(`\\s*${internalId}\\s*$`), "")
+                        .trim()
+                    : withoutCallsign;
+
+                let line =
+                    `${callsign} ${cleanName}${internalId ? ` ${internalId}` : ""}` +
+                    ` - RAPOARTE: ${stats.reports}`;
+
+                if (Number(member?.rankLevel || 0) >= 4) {
+                    line +=
+                        `, RAZII: ${stats.raids}, ANTRENAMENTE: ${stats.trainings}`;
+                }
+
+                return line;
+            });
+
+            const text = "\uFEFF" + lines.join("\r\n");
+            const blob = new Blob([text], {
+                type: "text/plain;charset=utf-8"
+            });
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            const date = new Date().toISOString().slice(0, 10);
+
+            a.href = url;
+            a.download = `activitate-diicot-${date}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+            if (label) {
+                label.textContent = `DESCĂRCAT • ${allReports.length} RAPOARTE`;
+                setTimeout(() => {
+                    if (label) label.textContent = originalLabel;
+                }, 2500);
+            }
+        }
+        catch (error) {
+            console.error("Leadership TXT export:", error);
+            if (label) label.textContent = "EROARE LA EXPORT";
+            alert(
+                "Exportul nu a putut fi generat.\n\n" +
+                (error?.message || "Eroare necunoscută.")
+            );
+            setTimeout(() => {
+                if (label) label.textContent = originalLabel;
+            }, 3000);
+        }
+        finally {
+            button.dataset.loading = "0";
+            button.disabled = false;
+        }
+    }
+
+    document.addEventListener("click", event => {
+        const button = event.target.closest("#leadership-export-btn");
+        if (!button) return;
+        event.preventDefault();
+        downloadLeadershipActivityTxt();
+    });
+
 
 (function(){
   const TRANSFER_API_BASE = "";
