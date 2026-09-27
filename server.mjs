@@ -11860,25 +11860,50 @@ async function syncDocsInBatches(editorId, editorName) {
         if (target?.id) usedRowIds.add(target.id);
     }
 
-    // Ștergem rândurile vechi ale aceleiași persoane mutate pe alt callsign și
-    // orice rând invalid rămas în afara sloturilor D-01..D-99.
+    // IMPORTANT: golim întâi identitatea Discord din rândurile existente.
+    // La un UP, aceeași persoană se mută dintr-un callsign în altul. Dacă
+    // discord_id este UNIQUE, un upsert direct poate eșua deoarece vechiul slot
+    // încă deține același discord_id în momentul în care este scris noul slot.
+    // Datele manuale sunt deja păstrate în memorie în `source` / `upsertRows`.
+    if (existingRows.length) {
+        const existingIds = existingRows.map(row => row.id).filter(Boolean);
+        for (let i = 0; i < existingIds.length; i += 80) {
+            const ids = existingIds.slice(i, i + 80);
+            const { error: clearIdentityError } = await supabase
+                .from("docs_personnel")
+                .update({ discord_id: null })
+                .in("id", ids);
+            if (clearIdentityError) throw clearIdentityError;
+        }
+    }
+
+    // Scriem toate sloturile în loturi. Asta păstrează numărul de subrequest-uri
+    // mic pe Cloudflare și evită 99 de update-uri Supabase separate.
+    for (let i = 0; i < upsertRows.length; i += 40) {
+        const batch = upsertRows.slice(i, i + 40);
+        const { error: upsertError } = await supabase
+            .from("docs_personnel")
+            .upsert(batch, { onConflict: "id" });
+        if (upsertError) throw upsertError;
+    }
+
+    // Ștergem doar rândurile care nu mai reprezintă unul dintre sloturile
+    // D-01..D-99 (duplicate/înregistrări vechi).
     const keepIds = new Set(upsertRows.map(row => String(row.id)));
     const staleIds = existingRows
         .filter(row => !keepIds.has(String(row.id)))
         .map(row => row.id)
         .filter(Boolean);
     if (staleIds.length) {
-        const { error: deleteError } = await supabase
-            .from("docs_personnel")
-            .delete()
-            .in("id", staleIds);
-        if (deleteError) throw deleteError;
+        for (let i = 0; i < staleIds.length; i += 80) {
+            const ids = staleIds.slice(i, i + 80);
+            const { error: deleteError } = await supabase
+                .from("docs_personnel")
+                .delete()
+                .in("id", ids);
+            if (deleteError) throw deleteError;
+        }
     }
-
-    const { error: upsertError } = await supabase
-        .from("docs_personnel")
-        .upsert(upsertRows, { onConflict: "id" });
-    if (upsertError) throw upsertError;
 
     return {
         success: true,
