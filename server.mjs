@@ -5151,6 +5151,77 @@ app.get(
 );
 
 
+
+// ======================================================
+// EXPORT RAPOARTE — PAGINĂ LIGHTWEIGHT / CLOUDFLARE SAFE
+// Pentru TXT nu avem nevoie de URL-urile pozelor.
+// O pagină = 1 ListObjects + max. 20 citiri JSON B2.
+// Browserul cere paginile pe rând, deci 1000+ rapoarte nu ajung
+// niciodată într-o singură invocare Worker.
+// ======================================================
+app.get(
+    "/api/leadership/reports-export-page",
+    requireAdmin,
+    async (req, res) => {
+        setPrivateApiCache(res, 300);
+
+        if (!ensureB2(res)) {
+            return;
+        }
+
+        try {
+            const page = await listB2ReportsPage(
+                null,
+                req.query.cursor || null,
+                Math.min(
+                    20,
+                    Math.max(1, Number(req.query.limit) || 20)
+                )
+            );
+
+            // Trimitem doar câmpurile necesare exportului.
+            // Fără signed URLs / poze => mult mai puține subrequest-uri.
+            const reports = (page.reports || []).map(report => ({
+                authorId: String(
+                    report.authorId ||
+                    report.userId ||
+                    report.discordId ||
+                    ""
+                ),
+                type: String(report.type || "RAPORT"),
+                createdAt:
+                    report.createdAt ||
+                    report.created_at ||
+                    null
+            }));
+
+            res.setHeader(
+                "X-DIICOT-Export-Mode",
+                "LIGHT-PAGED"
+            );
+
+            return res.json({
+                success: true,
+                reports,
+                nextCursor: page.nextCursor,
+                hasMore: page.hasMore
+            });
+        }
+        catch (error) {
+            console.error(
+                "Leadership lightweight export page error:",
+                error?.message || error
+            );
+
+            return res.status(500).json({
+                error:
+                    "Pagina de rapoarte pentru export nu a putut fi încărcată."
+            });
+        }
+    }
+);
+
+
 app.get(
     "/api/leadership/reports-export.txt",
     requireAdmin,
