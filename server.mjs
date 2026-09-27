@@ -5141,7 +5141,7 @@ app.get(
 
 
 app.get(
-    "/api/leadership/reports-export.csv",
+    "/api/leadership/reports-export.txt",
     requireAdmin,
     async (req, res) => {
         if (!ensureB2(res)) {
@@ -5167,60 +5167,136 @@ app.get(
             const activityByUser = new Map();
 
             for (const report of reports || []) {
-                const userId = String(report.authorId || report.author_id || "").trim();
+                const userId = String(
+                    report.authorId ||
+                    report.userId ||
+                    report.discordId ||
+                    ""
+                );
+
                 if (!userId) continue;
 
                 if (!activityByUser.has(userId)) {
-                    activityByUser.set(userId, { total: 0, raids: 0, trainings: 0 });
+                    activityByUser.set(userId, {
+                        reports: 0,
+                        raids: 0,
+                        trainings: 0
+                    });
                 }
 
                 const stats = activityByUser.get(userId);
                 const type = String(report.type || "").trim().toUpperCase();
-                stats.total += 1;
-                if (type === "RAZIE") stats.raids += 1;
-                if (type === "ANTRENAMENT") stats.trainings += 1;
+
+                // RAZII și ANTRENAMENTE sunt activități separate de rapoartele normale.
+                if (type === "RAZIE") {
+                    stats.raids += 1;
+                }
+                else if (type === "ANTRENAMENT") {
+                    stats.trainings += 1;
+                }
+                else {
+                    stats.reports += 1;
+                }
             }
 
-            const rows = [
-                ["CALLSIGN", "NUME", "DISCORD ID", "GRAD", "RAPOARTE", "RAZII", "ANTRENAMENTE"]
-            ];
+            const lines = [];
 
             for (const member of personnel) {
                 const stats = activityByUser.get(String(member.id)) || {
-                    total: 0,
+                    reports: 0,
                     raids: 0,
                     trainings: 0
                 };
-                const canOrganize = Number(member.rankLevel || 0) >= 4;
 
-                rows.push([
-                    callsignFromDisplayName(member.displayName) || "FĂRĂ CALLSIGN",
-                    removeExistingCallsign(member.displayName || member.username),
-                    member.id,
-                    member.rank,
-                    stats.total,
-                    canOrganize ? stats.raids : "-",
-                    canOrganize ? stats.trainings : "-"
-                ]);
+                const callsign =
+                    callsignFromDisplayName(member.displayName) ||
+                    "FĂRĂ CALLSIGN";
+
+                const name =
+                    removeExistingCallsign(
+                        member.displayName ||
+                        member.username ||
+                        "Necunoscut"
+                    );
+
+                // ID-ul intern din nickname/displayName, dacă există.
+                // Exemplu: "D-20 ANACONDA 364" -> 364.
+                const display =
+                    String(member.displayName || "");
+
+                const withoutCallsign =
+                    removeExistingCallsign(display);
+
+                const idMatch =
+                    withoutCallsign.match(/\b(\d{1,8})\b\s*$/);
+
+                const internalId =
+                    idMatch
+                        ? idMatch[1]
+                        : "";
+
+                const cleanName =
+                    internalId
+                        ? withoutCallsign
+                            .replace(
+                                new RegExp(`\\s*${internalId}\\s*$`),
+                                ""
+                            )
+                            .trim()
+                        : name;
+
+                // Sub Inspector+ = nivel 4+ în schema actuală DIICOT.
+                const isSubInspectorPlus =
+                    Number(member.rankLevel || 0) >= 4;
+
+                let line =
+                    `${callsign} ${cleanName}${internalId ? ` ${internalId}` : ""}` +
+                    ` - RAPOARTE: ${stats.reports}`;
+
+                if (isSubInspectorPlus) {
+                    line +=
+                        `, RAZII: ${stats.raids}` +
+                        `, ANTRENAMENTE: ${stats.trainings}`;
+                }
+
+                lines.push(line);
             }
 
-            const csv = "\uFEFF" + rows
-                .map(row => row.map(csvCell).join(";"))
-                .join("\r\n");
+            const text =
+                "\uFEFF" +
+                lines.join("\r\n");
 
-            const date = new Date().toISOString().slice(0, 10);
-            res.setHeader("Content-Type", "text/csv; charset=utf-8");
+            const date =
+                new Date()
+                    .toISOString()
+                    .slice(0, 10);
+
+            res.setHeader(
+                "Content-Type",
+                "text/plain; charset=utf-8"
+            );
+
             res.setHeader(
                 "Content-Disposition",
-                `attachment; filename="activitate-diicot-${date}.csv"`
+                `attachment; filename="activitate-diicot-${date}.txt"`
             );
-            res.setHeader("Cache-Control", "no-store");
-            return res.send(csv);
+
+            res.setHeader(
+                "Cache-Control",
+                "no-store"
+            );
+
+            return res.send(text);
         }
         catch (error) {
-            console.error("Leadership reports export error:", error.message || error);
+            console.error(
+                "Leadership reports TXT export error:",
+                error?.message || error
+            );
+
             return res.status(500).json({
-                error: "Fișierul cu activitatea personalului nu a putut fi generat."
+                error:
+                    "Fișierul cu activitatea personalului nu a putut fi generat."
             });
         }
     }
@@ -14518,6 +14594,245 @@ app.post(
 );
 
 
+
+
+// ======================================================
+// PREZENȚĂ ȘEDINȚĂ — DISCORD VOICE + FW AUTOMAT
+// ======================================================
+
+const MEETING_ATTENDANCE_MANAGER_ID = "1315733546312142921";
+const MEETING_VOICE_CHANNEL_ID = "1529134820368847061";
+const MEETING_ATTENDANCE_LOG_CHANNEL_ID = "1547327388478738643";
+const MEETING_ABSENCE_FW = 3;
+const MEETING_LEADERSHIP_MIN_LEVEL = 10; // COORDONATOR+ = conducere
+
+function requireMeetingAttendanceManager(req, res, next) {
+    if (!req.session?.user) {
+        return res.status(401).json({ error: "Trebuie să fii autentificat." });
+    }
+    if (String(req.session.user.id || "") !== MEETING_ATTENDANCE_MANAGER_ID) {
+        return res.status(403).json({ error: "Nu ai acces la prezența ședinței." });
+    }
+    next();
+}
+
+function meetingDateRO(date = new Date()) {
+    return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Bucharest",
+        year: "numeric", month: "2-digit", day: "2-digit"
+    }).format(date);
+}
+
+async function getMeetingVoiceUserIds() {
+    if (!BOT_TOKEN || !GUILD_ID) throw new Error("Botul Discord nu este configurat.");
+    const response = await axios.get(
+        `https://discord.com/api/v10/guilds/${GUILD_ID}/voice-states`,
+        { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+    );
+    const states = Array.isArray(response.data) ? response.data : [];
+    return new Set(
+        states
+            .filter(state => String(state?.channel_id || "") === MEETING_VOICE_CHANNEL_ID)
+            .map(state => String(state?.user_id || ""))
+            .filter(Boolean)
+    );
+}
+
+async function getMeetingExcusedUserIds(date = new Date()) {
+    const day = meetingDateRO(date);
+    const { data, error } = await supabase
+        .from("leave_requests")
+        .select("author_id,type,start_date,end_date,status")
+        .eq("status", "APPROVED")
+        .lte("start_date", day)
+        .gte("end_date", day);
+    if (error) throw error;
+    return new Set((data || []).map(row => String(row.author_id || "")).filter(Boolean));
+}
+
+async function getCurrentActiveFw(userId) {
+    const { data, error } = await supabase
+        .from("sanctions")
+        .select("fw_count")
+        .eq("target_id", String(userId))
+        .eq("type", "FW")
+        .eq("active", true);
+    if (error) throw error;
+    return (data || []).reduce((sum, row) => sum + Number(row.fw_count || 0), 0);
+}
+
+async function applyMeetingAbsenceSanction(member) {
+    const targetId = String(member?.user?.id || "");
+    const targetName = String(member?.nick || member?.user?.global_name || member?.user?.username || targetId);
+    const currentFw = await getCurrentActiveFw(targetId);
+    const fwCount = Math.max(0, Math.min(MEETING_ABSENCE_FW, 5 - currentFw));
+    const activeFw = Math.min(5, currentFw + fwCount);
+    const reason = "Neprezentare ședință";
+
+    if (fwCount > 0) {
+        const row = {
+            id: crypto.randomUUID(),
+            target_id: targetId,
+            target_name: targetName,
+            type: "FW",
+            fw_count: fwCount,
+            reason,
+            active: true,
+            applied_by_id: "SYSTEM_MEETING",
+            applied_by_name: "Sistem Prezență Ședință",
+            applied_by_rank: "AUTOMAT"
+        };
+        const { error } = await supabase.from("sanctions").insert(row);
+        if (error) throw error;
+    }
+
+    try { await syncFactionWarnDiscordRole(targetId, activeFw); }
+    catch (error) { console.warn("Meeting FW role sync warning:", targetId, error?.message || error); }
+
+    if (fwCount > 0) {
+        try {
+            await sendSanctionInfoMessage({
+                targetId, targetName, type: "FW", fwCount, activeFw, reason,
+                appliedByName: "Sistem Prezență Ședință", appliedByRank: "AUTOMAT"
+            });
+        } catch (error) { console.warn("Meeting sanction channel warning:", error?.message || error); }
+        try {
+            await sendDiscordDM(targetId,
+                ["⚠️ **NOTIFICARE SANCȚIUNE — DIICOT**", "", `Ai primit **${fwCount} Faction Warn**.`,
+                 `**Situație activă:** ${activeFw}/5 FW`, `**Motiv:** ${reason}`,
+                 "**Aplicată de:** Sistem Prezență Ședință", "", "Sancțiunea a fost înregistrată automat."].join("\n")
+            );
+        } catch (error) { console.warn("Meeting sanction DM warning:", targetId, error?.message || error); }
+    }
+
+    return { fwAdded: fwCount, activeFw };
+}
+
+function meetingMemberLabel(member, rank) {
+    const name = String(member?.nick || member?.user?.global_name || member?.user?.username || member?.user?.id || "Necunoscut");
+    return { id: String(member?.user?.id || ""), name, rank: rank?.name || "DIICOT" };
+}
+
+async function sendMeetingAttendanceReport(result) {
+    if (!BOT_TOKEN || !MEETING_ATTENDANCE_LOG_CHANNEL_ID) return;
+    const line = item => `• <@${item.id}> — ${item.name}${item.rank ? ` (${item.rank})` : ""}`;
+    const chunk = (title, items, empty = "Nimeni") => {
+        const rows = items.length ? items.map(line).join("\n") : empty;
+        return `**${title} (${items.length})**\n${rows}`;
+    };
+    const content = [
+        "📋 **PREZENȚĂ ȘEDINȚĂ — DIICOT**",
+        `🕒 ${formatRomanianDate(new Date())}`,
+        `🔊 Voice: <#${MEETING_VOICE_CHANNEL_ID}>`, "",
+        chunk("✅ PREZENȚI", result.present), "",
+        chunk("🟦 SCUTIȚI", result.excused), "",
+        chunk("❌ ABSENȚI / SANCȚIONAȚI", result.absent), "",
+        `**TOTAL:** ${result.present.length} prezenți • ${result.excused.length} scutiți • ${result.absent.length} absenți`
+    ].join("\n");
+
+    // Discord limitează content la 2000 caractere; împărțim raportul fără să pierdem persoane.
+    const parts = [];
+    let current = "";
+    for (const row of content.split("\n")) {
+        if ((current + "\n" + row).length > 1900) { parts.push(current); current = row; }
+        else current += (current ? "\n" : "") + row;
+    }
+    if (current) parts.push(current);
+    for (const part of parts) {
+        await axios.post(
+            `https://discord.com/api/v10/channels/${MEETING_ATTENDANCE_LOG_CHANNEL_ID}/messages`,
+            { content: part, allowed_mentions: { parse: [] } },
+            { headers: { Authorization: `Bot ${BOT_TOKEN}`, "Content-Type": "application/json" } }
+        );
+    }
+}
+
+async function runMeetingAttendance() {
+    const [guildMembers, voiceIds, excusedIds] = await Promise.all([
+        getGuildMembersCached({ force: true }),
+        getMeetingVoiceUserIds(),
+        getMeetingExcusedUserIds(new Date())
+    ]);
+
+    const diicotMembers = (guildMembers || [])
+        .map(member => ({ member, rank: resolveHighestDIICOTRoleSafe(member?.roles || []) }))
+        .filter(item => item.rank && !item.member?.user?.bot);
+
+    const result = { present: [], excused: [], absent: [] };
+
+    for (const { member, rank } of diicotMembers) {
+        const id = String(member?.user?.id || "");
+        const base = meetingMemberLabel(member, rank);
+
+        if (voiceIds.has(id)) {
+            result.present.push(base);
+            continue;
+        }
+        if (Number(rank.level || 0) >= MEETING_LEADERSHIP_MIN_LEVEL) {
+            result.excused.push({ ...base, reason: "CONDUCERE" });
+            continue;
+        }
+        if (excusedIds.has(id)) {
+            result.excused.push({ ...base, reason: "CONCEDIU / ÎNVOIRE APROBATĂ" });
+            continue;
+        }
+
+        const sanction = await applyMeetingAbsenceSanction(member);
+        result.absent.push({ ...base, reason: "Neprezentare ședință", ...sanction });
+    }
+
+    await sendMeetingAttendanceReport(result);
+    return result;
+}
+
+app.post("/api/meeting-attendance/run-now", requireMeetingAttendanceManager, async (req, res) => {
+    if (!ensureSupabase(res)) return;
+    try {
+        const result = await runMeetingAttendance();
+        return res.json({ success: true, result });
+    } catch (error) {
+        console.error("Meeting Attendance Run Error:", error);
+        return res.status(500).json({ error: error?.response?.data?.message || error?.message || "Prezența nu a putut fi făcută." });
+    }
+});
+
+// Istoric/programări. Dacă tabela nu există încă, lista rămâne goală, dar „FĂ PREZENȚA ACUM” funcționează.
+app.get("/api/meeting-attendance", requireMeetingAttendanceManager, async (req, res) => {
+    if (!ensureSupabase(res)) return;
+    try {
+        const { data, error } = await supabase.from("meeting_attendance").select("*").order("scheduled_at", { ascending: false }).limit(30);
+        if (error) return res.json({ meetings: [] });
+        return res.json({ meetings: data || [] });
+    } catch { return res.json({ meetings: [] }); }
+});
+
+app.post("/api/meeting-attendance", requireMeetingAttendanceManager, async (req, res) => {
+    if (!ensureSupabase(res)) return;
+    try {
+        const scheduledAt = new Date(req.body?.scheduledAt || "");
+        if (!Number.isFinite(scheduledAt.getTime()) || scheduledAt.getTime() <= Date.now()) {
+            return res.status(400).json({ error: "Selectează o dată și o oră din viitor." });
+        }
+        const row = {
+            id: crypto.randomUUID(), scheduled_at: scheduledAt.toISOString(), status: "SCHEDULED",
+            created_by: String(req.session.user.id), created_at: new Date().toISOString()
+        };
+        const { data, error } = await supabase.from("meeting_attendance").insert(row).select("*").single();
+        if (error) throw error;
+        return res.status(201).json({ success: true, meeting: data });
+    } catch (error) {
+        return res.status(500).json({ error: "Programarea nu a putut fi salvată. Verifică tabela meeting_attendance din Supabase." });
+    }
+});
+
+app.delete("/api/meeting-attendance/:id", requireMeetingAttendanceManager, async (req, res) => {
+    if (!ensureSupabase(res)) return;
+    try {
+        const { error } = await supabase.from("meeting_attendance").delete().eq("id", String(req.params.id || "")).eq("status", "SCHEDULED");
+        if (error) throw error;
+        return res.json({ success: true });
+    } catch (error) { return res.status(500).json({ error: "Programarea nu a putut fi anulată." }); }
+});
 
 // ======================================================
 // TEST MANAGEMENT — LOAD
