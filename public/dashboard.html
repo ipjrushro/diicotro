@@ -31698,12 +31698,11 @@ const query =
                 return;
             }
 
-            const confirmation = prompt(
-                'Pentru confirmare scrie exact: STERGE RAPOARTELE'
-            );
-
-            if (confirmation !== "STERGE RAPOARTELE") {
-                alert("Ștergerea a fost anulată.");
+            // A doua confirmare, fără prompt text. Înainte, orice spațiu/diacritică
+            // făcea acțiunea să fie anulată chiar dacă utilizatorul voia ștergerea.
+            if (!confirm(
+                "CONFIRMARE FINALĂ: șterg definitiv toate rapoartele și imaginile din B2?"
+            )) {
                 return;
             }
 
