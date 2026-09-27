@@ -33666,7 +33666,7 @@ const query =
                 if (cursor) params.set("cursor", cursor);
 
                 const reportsResponse = await fetch(
-                    `/api/admin/reports?${params.toString()}`,
+                    `/api/leadership/reports-export-page?${params.toString()}`,
                     {
                         credentials: "same-origin"
                     }
@@ -33679,7 +33679,7 @@ const query =
                         detail = body?.error ? ` — ${body.error}` : "";
                     } catch {}
                     throw new Error(
-                        `Rapoarte: HTTP ${reportsResponse.status}${detail}`
+                        `Export rapoarte: HTTP ${reportsResponse.status}${detail}`
                     );
                 }
 
@@ -33697,7 +33697,7 @@ const query =
 
                 // Cedăm puțin browserului între pagini ca UI-ul să rămână fluid.
                 if (cursor) {
-                    await new Promise(resolve => setTimeout(resolve, 20));
+                    await new Promise(resolve => setTimeout(resolve, 75));
                 }
 
                 // Protecție împotriva unui cursor defect care ar bucla la infinit.
