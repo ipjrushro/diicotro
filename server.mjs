@@ -3075,8 +3075,9 @@ app.get(
 app.get(
     "/enter",
     (req, res) => {
-        // Compatibilitate cu link-uri vechi: /enter nu mai execută login separat.
-        return res.redirect("/dashboard");
+        // Compatibilitate cu link-uri vechi.
+        // Pornim OAuth direct; callback-ul deschide dashboard.html.
+        return res.redirect("/auth/discord");
     }
 );
 
@@ -3359,7 +3360,7 @@ app.get(
             // După autentificarea Discord intrăm direct
             // în Centrul de Comandă.
             res.redirect(
-                "/dashboard"
+                "/dashboard.html"
             );
 
         }
