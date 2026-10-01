@@ -2999,6 +2999,58 @@ function requireAuth(req, res, next) {
     next();
 }
 
+
+// ======================================================
+// PERMISIUNI TESTER / SANCTIUNI
+// ======================================================
+function hasTesterAccess(user) {
+    if (!user) return false;
+
+    const roles = Array.isArray(user.roles)
+        ? user.roles.map(String)
+        : [];
+
+    return Number(user.rankLevel || 0) >= 10 ||
+        roles.includes(String(TESTER_DIICOT_ROLE_ID));
+}
+
+function requireTester(req, res, next) {
+    const user = req.session?.user;
+
+    if (!user) {
+        return res.status(401).json({
+            error: "Trebuie să fii autentificat."
+        });
+    }
+
+    if (!hasTesterAccess(user)) {
+        return res.status(403).json({
+            error: "Nu ai acces la testarea candidaților."
+        });
+    }
+
+    next();
+}
+
+// Sancțiunile sunt marcate în server ca funcție COORDONATOR+.
+function requireSanctionManager(req, res, next) {
+    const user = req.session?.user;
+
+    if (!user) {
+        return res.status(401).json({
+            error: "Trebuie să fii autentificat."
+        });
+    }
+
+    if (!user.rankRoleId || Number(user.rankLevel || 0) < 10) {
+        return res.status(403).json({
+            error: "Sancțiunile pot fi gestionate doar de Coordonator+."
+        });
+    }
+
+    next();
+}
+
 // ======================================================
 // ADMIN / CONDUCERE MIDDLEWARE
 // COORDONATOR DIICOT (level 10) sau mai sus.
@@ -3382,7 +3434,7 @@ app.get(
             // După autentificarea Discord intrăm direct
             // în Centrul de Comandă.
             res.redirect(
-                "/dashboard"
+                "/dashboard.html"
             );
 
         }
