@@ -47,11 +47,10 @@ export default {
       return Response.redirect("https://mairushro.mairushro.workers.dev/", 302);
     }
 
-    // IMPORTANT: dashboard-ul trebuie să treacă prin Express, nu direct prin
-    // Cloudflare Assets. Așa se verifică sesiunea DIICOT înainte de a servi pagina.
-    if (url.pathname === "/dashboard.html") {
-      url.pathname = "/dashboard";
-      request = new Request(url.toString(), request);
+
+    if (url.pathname === "/dashboard") {
+      url.pathname = "/dashboard.html";
+      return env.ASSETS.fetch(assetRequest(request, url.pathname));
     }
 
     if (isStaticPath(url.pathname)) {
