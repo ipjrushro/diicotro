@@ -3000,6 +3000,29 @@ function requireAuth(req, res, next) {
 }
 
 // ======================================================
+// ADMIN / CONDUCERE MIDDLEWARE
+// COORDONATOR DIICOT (level 10) sau mai sus.
+// ======================================================
+function requireAdmin(req, res, next) {
+    const user = req.session?.user;
+
+    if (!user) {
+        return res.status(401).json({
+            error: "Trebuie să fii autentificat prin HUB MAI.",
+            hub: "https://mairushro.mairushro.workers.dev/"
+        });
+    }
+
+    if (!user.rankRoleId || Number(user.rankLevel || 0) < 10) {
+        return res.status(403).json({
+            error: "Această acțiune este disponibilă doar conducerii DIICOT (Coordonator+)."
+        });
+    }
+
+    next();
+}
+
+// ======================================================
 // PAGINI
 // ======================================================
 
@@ -3075,9 +3098,8 @@ app.get(
 app.get(
     "/enter",
     (req, res) => {
-        // Compatibilitate cu link-uri vechi.
-        // Pornim OAuth direct; callback-ul deschide dashboard.html.
-        return res.redirect("/auth/discord");
+        // Compatibilitate cu link-uri vechi: /enter nu mai execută login separat.
+        return res.redirect("/dashboard");
     }
 );
 
@@ -3360,7 +3382,7 @@ app.get(
             // După autentificarea Discord intrăm direct
             // în Centrul de Comandă.
             res.redirect(
-                "/dashboard.html"
+                "/dashboard"
             );
 
         }
