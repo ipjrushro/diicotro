@@ -2979,165 +2979,25 @@ async function getDiscordUserBasic(
 // ======================================================
 // AUTH MIDDLEWARE
 // ======================================================
-
-function requireAuth(
-    req,
-    res,
-    next
-) {
-
-    if (
-        !req.session?.user
-    ) {
-
-        return res
-            .status(401)
-            .json({
-                error:
-                    "Trebuie să fii autentificat."
-            });
-    }
-
-    next();
-}
-
-
-function requireAdmin(
-    req,
-    res,
-    next
-) {
-
-    if (
-        !req.session?.user
-    ) {
-
-        return res
-            .status(401)
-            .json({
-                error:
-                    "Trebuie să fii autentificat."
-            });
-    }
-
-    if (
-        Number(
-            req.session.user.rankLevel ||
-            0
-        ) < 10
-    ) {
-
-        return res
-            .status(403)
-            .json({
-                error:
-                    "Nu ai acces la această secțiune."
-            });
-    }
-
-    next();
-}
-
-
-function requireSanctionManager(
-    req,
-    res,
-    next
-) {
-
-    if (
-        !req.session?.user
-    ) {
-        return res
-            .status(401)
-            .json({
-                error:
-                    "Trebuie să fii autentificat."
-            });
-    }
-
-    // SUB COMISAR+ (rankLevel 7+) poate vedea, aplica și retrage sancțiuni.
-    if (
-        Number(
-            req.session.user.rankLevel ||
-            0
-        ) < 7
-    ) {
-        return res
-            .status(403)
-            .json({
-                error:
-                    "Doar SUB COMISAR+ poate gestiona sancțiunile."
-            });
-    }
-
-    next();
-}
-
-
-function hasTesterAccess(
-    user
-) {
+function requireAuth(req, res, next) {
+    const user = req.session?.user;
 
     if (!user) {
-        return false;
+        return res.status(401).json({
+            error: "Trebuie să fii autentificat prin HUB MAI.",
+            hub: "https://mairushro.mairushro.workers.dev/"
+        });
     }
 
-    const roles =
-        Array.isArray(
-            user.roles
-        )
-            ? user.roles.map(String)
-            : [];
-
-    return (
-        Number(
-            user.rankLevel ||
-            0
-        ) >= 10 ||
-        roles.includes(
-            TESTER_DIICOT_ROLE_ID
-        )
-    );
-}
-
-
-function requireTester(
-    req,
-    res,
-    next
-) {
-
-    if (
-        !req.session?.user
-    ) {
-
-        return res
-            .status(401)
-            .json({
-                error:
-                    "Trebuie să fii autentificat."
-            });
-    }
-
-    if (
-        !hasTesterAccess(
-            req.session.user
-        )
-    ) {
-
-        return res
-            .status(403)
-            .json({
-                error:
-                    "Doar Tester DIICOT sau Conducerea poate accesa testele."
-            });
+    if (!user.rankRoleId || Number(user.rankLevel || 0) < 1) {
+        return res.status(403).json({
+            error: "Nu ai un grad DIICOT activ.",
+            hub: "https://mairushro.mairushro.workers.dev/"
+        });
     }
 
     next();
 }
-
-
 
 // ======================================================
 // PAGINI
@@ -3145,59 +3005,24 @@ function requireTester(
 
 app.get(
     "/",
-
-    (
-        req,
-        res
-    ) => {
-
-        res.set(
-            "Cache-Control",
-            "public, max-age=300, must-revalidate"
-        );
-
-        res.sendFile(
-            path.join(
-                __dirname,
-                "index.html"
-            ),
-            {
-                maxAge: "5m",
-                cacheControl: true,
-                lastModified: true
-            }
-        );
+    (req, res) => {
+        // DIICOT nu mai are index/login separat.
+        return res.redirect("https://mairushro.mairushro.workers.dev/");
     }
 );
-
 
 app.get(
     "/dashboard",
+    (req, res) => {
+        const user = req.session?.user;
 
-    (
-        req,
-        res
-    ) => {
-
-        if (
-            !req.session?.user
-        ) {
-
-            return res.redirect(
-                "/"
-            );
+        if (!user || !user.rankRoleId || Number(user.rankLevel || 0) < 1) {
+            return res.redirect("https://mairushro.mairushro.workers.dev/?error=diicot_access");
         }
 
-        res.set(
-            "Cache-Control",
-            "private, max-age=300, must-revalidate"
-        );
-
+        res.set("Cache-Control", "private, max-age=300, must-revalidate");
         res.sendFile(
-            path.join(
-                __dirname,
-                "dashboard.html"
-            ),
+            path.join(__dirname, "dashboard.html"),
             {
                 maxAge: "5m",
                 cacheControl: true,
@@ -3206,7 +3031,6 @@ app.get(
         );
     }
 );
-
 
 app.get(
     "/style.css",
@@ -3325,7 +3149,7 @@ app.get(
         if (!code) {
 
             return res.redirect(
-                "/?error=no_code"
+                "https://mairushro.mairushro.workers.dev/?error=no_code"
             );
         }
 
@@ -3337,7 +3161,7 @@ app.get(
         ) {
 
             return res.redirect(
-                "/?error=invalid_state"
+                "https://mairushro.mairushro.workers.dev/?error=invalid_state"
             );
         }
 
@@ -3433,6 +3257,11 @@ app.get(
                     roles
                 );
 
+            if (!rank) {
+                req.session.user = null;
+                return res.redirect("https://mairushro.mairushro.workers.dev/?error=no_diicot_role");
+            }
+
             let savedProfile =
                 null;
 
@@ -3523,7 +3352,7 @@ app.get(
             );
 
             res.redirect(
-                "/?error=discord"
+                "https://mairushro.mairushro.workers.dev/?error=discord"
             );
         }
     }
@@ -16015,9 +15844,7 @@ app.get(
             null;
 
 
-        res.redirect(
-            "/"
-        );
+        res.redirect("https://mairushro.mairushro.workers.dev/");
     }
 );
 
