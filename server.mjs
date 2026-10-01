@@ -3016,8 +3016,17 @@ app.get(
     (req, res) => {
         const user = req.session?.user;
 
-        if (!user || !user.rankRoleId || Number(user.rankLevel || 0) < 1) {
-            return res.redirect("https://mairushro.mairushro.workers.dev/?error=diicot_access");
+        // Dashboard-ul este acum singura poartă de intrare DIICOT.
+        // Dacă nu există încă sesiune locală, pornim autentificarea Discord;
+        // callback-ul revine apoi direct în /dashboard.
+        if (!user) {
+            return res.redirect("/auth/discord");
+        }
+
+        // Există sesiune, dar contul nu mai are un grad DIICOT valid.
+        if (!user.rankRoleId || Number(user.rankLevel || 0) < 1) {
+            req.session.user = null;
+            return res.redirect("https://mairushro.mairushro.workers.dev/?error=no_diicot_role");
         }
 
         res.set("Cache-Control", "private, max-age=300, must-revalidate");
@@ -3066,13 +3075,8 @@ app.get(
 app.get(
     "/enter",
     (req, res) => {
-        const user = req.session?.user;
-
-        if (user?.rankRoleId && Number(user.rankLevel || 0) >= 1) {
-            return res.redirect("/dashboard");
-        }
-
-        return res.redirect("/auth/discord");
+        // Compatibilitate cu link-uri vechi: /enter nu mai execută login separat.
+        return res.redirect("/dashboard");
     }
 );
 
