@@ -41,14 +41,21 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/dashboard") {
-      url.pathname = "/dashboard.html";
-      return Response.redirect(url.toString(), 302);
+    // DIICOT nu mai folosește indexul propriu ca poartă de intrare.
+    // HUB MAI este punctul central.
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      return Response.redirect("https://mairushro.mairushro.workers.dev/", 302);
+    }
+
+    // IMPORTANT: dashboard-ul trebuie să treacă prin Express, nu direct prin
+    // Cloudflare Assets. Așa se verifică sesiunea DIICOT înainte de a servi pagina.
+    if (url.pathname === "/dashboard.html") {
+      url.pathname = "/dashboard";
+      request = new Request(url.toString(), request);
     }
 
     if (isStaticPath(url.pathname)) {
-      const pathname = url.pathname === "/" ? "/index.html" : url.pathname;
-      return env.ASSETS.fetch(assetRequest(request, pathname));
+      return env.ASSETS.fetch(assetRequest(request, url.pathname));
     }
 
     const expressHandler = await getExpressHandler(env);
