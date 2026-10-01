@@ -3061,6 +3061,23 @@ app.get(
 
 
 // ======================================================
+// INTRARE DIN HUB MAI
+// ======================================================
+app.get(
+    "/enter",
+    (req, res) => {
+        const user = req.session?.user;
+
+        if (user?.rankRoleId && Number(user.rankLevel || 0) >= 1) {
+            return res.redirect("/dashboard");
+        }
+
+        return res.redirect("/auth/discord");
+    }
+);
+
+
+// ======================================================
 // DISCORD LOGIN
 // ======================================================
 
