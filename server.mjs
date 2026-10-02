@@ -3032,7 +3032,7 @@ function requireTester(req, res, next) {
     next();
 }
 
-// Sancțiunile sunt marcate în server ca funcție COORDONATOR+.
+// Sancțiunile pot fi gestionate de la SUB COMISAR DIICOT (level 7) în sus.
 function requireSanctionManager(req, res, next) {
     const user = req.session?.user;
 
@@ -3042,9 +3042,9 @@ function requireSanctionManager(req, res, next) {
         });
     }
 
-    if (!user.rankRoleId || Number(user.rankLevel || 0) < 10) {
+    if (!user.rankRoleId || Number(user.rankLevel || 0) < 7) {
         return res.status(403).json({
-            error: "Sancțiunile pot fi gestionate doar de Coordonator+."
+            error: "Sancțiunile pot fi gestionate doar de la Sub Comisar DIICOT în sus."
         });
     }
 
@@ -14131,7 +14131,7 @@ app.post(
 
 
 // ======================================================
-// ACTIVITĂȚI — SANCȚIUNI COORDONATOR+
+// ACTIVITĂȚI — SANCȚIUNI SUB COMISAR+
 // ======================================================
 
 
