@@ -5327,76 +5327,88 @@ app.get(
 // Restul datelor din Supabase nu este atins.
 // ======================================================
 
+// Handler comun pentru ștergerea globală. Folosim POST ca rută principală
+// deoarece unele proxy-uri/CDN-uri pot trata DELETE cu body în mod diferit.
+// DELETE rămâne disponibil pentru compatibilitate.
+async function deleteAllReportsHandler(req, res) {
+    if (!ensureB2(res)) {
+        return;
+    }
+
+    if (
+        String(
+            req.body?.confirmation ||
+            ""
+        ) !== "STERGE RAPOARTELE"
+    ) {
+        return res.status(400).json({
+            error:
+                "Confirmarea pentru ștergere este invalidă."
+        });
+    }
+
+    try {
+        // Rapoartele și imaginile sunt stocate în B2. Ștergem TOATE versiunile
+        // și delete-marker-ele, nu doar ultima versiune vizibilă.
+        const reportVersions = await listB2ObjectVersions("reports/");
+        const imageVersions = await listB2ObjectVersions("images/");
+
+        await deleteB2Objects([
+            ...imageVersions,
+            ...reportVersions
+        ]);
+
+        // Verificare reală în B2 înainte să spunem că operația a reușit.
+        const remainingReports = await listB2ObjectVersions("reports/");
+        const remainingImages = await listB2ObjectVersions("images/");
+
+        if (remainingReports.length || remainingImages.length) {
+            throw new Error(
+                `Au rămas obiecte în B2: reports=${remainingReports.length}, images=${remainingImages.length}`
+            );
+        }
+
+        // Site-ul citește rapoartele din acest cache. Îl golim numai după ce
+        // B2 confirmă că ștergerea este completă.
+        clearB2ReportCache();
+
+        console.log(
+            `[B2] Ștergere globală completă: ${reportVersions.length} versiuni rapoarte, ${imageVersions.length} versiuni imagini.`
+        );
+
+        return res.json({
+            success: true,
+            deletedReports: reportVersions.filter(
+                item => item.Key.endsWith(".json")
+            ).length,
+            deletedImages: imageVersions.length,
+            message:
+                "Toate rapoartele și toate imaginile au fost șterse definitiv din site și Backblaze B2."
+        });
+    }
+    catch (error) {
+        console.error(
+            "Delete All Reports B2 Error:",
+            error
+        );
+
+        return res.status(500).json({
+            error:
+                "Rapoartele nu au putut fi șterse complet din Backblaze B2. Nimic nu este raportat ca șters până când B2 nu confirmă operația."
+        });
+    }
+}
+
+app.post(
+    "/api/admin/reports/all",
+    requireAdmin,
+    deleteAllReportsHandler
+);
+
 app.delete(
     "/api/admin/reports/all",
     requireAdmin,
-    async (req, res) => {
-        if (!ensureB2(res)) {
-            return;
-        }
-
-        if (
-            String(
-                req.body?.confirmation ||
-                ""
-            ) !== "STERGE RAPOARTELE"
-        ) {
-            return res.status(400).json({
-                error:
-                    "Confirmarea pentru ștergere este invalidă."
-            });
-        }
-
-        try {
-            // B2 păstrează versiuni. Le enumerăm și le ștergem explicit
-            // cu VersionId, inclusiv eventualele delete markers.
-            const reportVersions = await listB2ObjectVersions("reports/");
-            const imageVersions = await listB2ObjectVersions("images/");
-
-            await deleteB2Objects([
-                ...imageVersions,
-                ...reportVersions
-            ]);
-
-            // Verificare finală: ruta nu raportează succes dacă au rămas
-            // versiuni/markere sub prefixele de rapoarte.
-            const remainingReports = await listB2ObjectVersions("reports/");
-            const remainingImages = await listB2ObjectVersions("images/");
-
-            if (remainingReports.length || remainingImages.length) {
-                throw new Error(
-                    `Au rămas obiecte în B2: reports=${remainingReports.length}, images=${remainingImages.length}`
-                );
-            }
-
-            clearB2ReportCache();
-
-            console.log(
-                `[B2] Ștergere globală completă: ${reportVersions.length} versiuni rapoarte, ${imageVersions.length} versiuni imagini.`
-            );
-
-            return res.json({
-                success: true,
-                deletedReports: reportVersions.filter(
-                    item => item.Key.endsWith(".json")
-                ).length,
-                deletedImages: imageVersions.length,
-                message:
-                    "Toate rapoartele și toate versiunile imaginilor au fost șterse definitiv din Backblaze B2."
-            });
-        }
-        catch (error) {
-            console.error(
-                "Delete All Reports B2 Error:",
-                error
-            );
-
-            return res.status(500).json({
-                error:
-                    "Rapoartele nu au putut fi șterse complet din Backblaze B2."
-            });
-        }
-    }
+    deleteAllReportsHandler
 );
 
 
