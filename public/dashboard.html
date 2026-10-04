@@ -31772,7 +31772,7 @@ const query =
                 const response = await fetch(
                     "/api/admin/reports/all",
                     {
-                        method: "DELETE",
+                        method: "POST",
                         credentials: "include",
                         headers: {
                             "Content-Type": "application/json"
@@ -31783,11 +31783,22 @@ const query =
                     }
                 );
 
-                const data = await response.json();
+                // API-ul trebuie să răspundă JSON. Dacă hosting-ul întoarce HTML
+                // (de exemplu o pagină 404), afișăm un mesaj util în locul erorii
+                // criptice „Unexpected token <”.
+                const responseText = await response.text();
+                let data = null;
+                try {
+                    data = responseText ? JSON.parse(responseText) : null;
+                } catch {
+                    throw new Error(
+                        `Serverul nu a răspuns cu JSON (HTTP ${response.status}). Verifică deploy-ul Worker-ului DIICOT.`
+                    );
+                }
 
                 if (!response.ok) {
                     throw new Error(
-                        data.error || "Rapoartele nu au putut fi șterse."
+                        data?.error || "Rapoartele nu au putut fi șterse."
                     );
                 }
 
