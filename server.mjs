@@ -5109,11 +5109,9 @@ app.get(
             const page = await listB2ReportsPage(
                 null,
                 req.query.cursor || null,
-                // Pagini mai mici reduc subrequest-urile B2 per invocare
-                // și evită răspunsuri întrerupte la exporturile mari.
                 Math.min(
-                    5,
-                    Math.max(1, Number(req.query.limit) || 5)
+                    20,
+                    Math.max(1, Number(req.query.limit) || 20)
                 )
             );
 
@@ -5333,70 +5331,88 @@ app.get(
 // deoarece unele proxy-uri/CDN-uri pot trata DELETE cu body în mod diferit.
 // DELETE rămâne disponibil pentru compatibilitate.
 async function deleteAllReportsHandler(req, res) {
-    if (!ensureB2(res)) {
-        return;
+    if (!ensureB2(res)) return;
+
+    if (String(req.body?.confirmation || "") !== "STERGE RAPOARTELE") {
+        return res.status(400).json({ error: "Confirmarea pentru ștergere este invalidă." });
     }
 
-    if (
-        String(
-            req.body?.confirmation ||
-            ""
-        ) !== "STERGE RAPOARTELE"
-    ) {
-        return res.status(400).json({
-            error:
-                "Confirmarea pentru ștergere este invalidă."
-        });
-    }
+    // Procesăm o singură pagină per request pentru a evita limita CPU Cloudflare.
+    // Dashboard-ul va apela endpoint-ul succesiv până când done=true.
+    const allowedPhases = ["images", "reports"];
+    const requestedCursor = req.body?.cursor && typeof req.body.cursor === "object"
+        ? req.body.cursor
+        : {};
+    let phase = allowedPhases.includes(requestedCursor.phase) ? requestedCursor.phase : "images";
+    let keyMarker = typeof requestedCursor.keyMarker === "string" ? requestedCursor.keyMarker : undefined;
+    let versionIdMarker = typeof requestedCursor.versionIdMarker === "string" ? requestedCursor.versionIdMarker : undefined;
 
     try {
-        // Rapoartele și imaginile sunt stocate în B2. Ștergem TOATE versiunile
-        // și delete-marker-ele, nu doar ultima versiune vizibilă.
-        const reportVersions = await listB2ObjectVersions("reports/");
-        const imageVersions = await listB2ObjectVersions("images/");
+        const prefix = phase === "images" ? "images/" : "reports/";
+        const response = await b2.send(new ListObjectVersionsCommand({
+            Bucket: B2_BUCKET,
+            Prefix: prefix,
+            KeyMarker: keyMarker,
+            VersionIdMarker: versionIdMarker,
+            MaxKeys: 25
+        }));
 
-        await deleteB2Objects([
-            ...imageVersions,
-            ...reportVersions
-        ]);
-
-        // Verificare reală în B2 înainte să spunem că operația a reușit.
-        const remainingReports = await listB2ObjectVersions("reports/");
-        const remainingImages = await listB2ObjectVersions("images/");
-
-        if (remainingReports.length || remainingImages.length) {
-            throw new Error(
-                `Au rămas obiecte în B2: reports=${remainingReports.length}, images=${remainingImages.length}`
-            );
+        const objects = [];
+        for (const version of response.Versions || []) {
+            if (version.Key && version.VersionId) {
+                objects.push({ Key: version.Key, VersionId: version.VersionId });
+            }
+        }
+        for (const marker of response.DeleteMarkers || []) {
+            if (marker.Key && marker.VersionId) {
+                objects.push({ Key: marker.Key, VersionId: marker.VersionId });
+            }
         }
 
-        // Site-ul citește rapoartele din acest cache. Îl golim numai după ce
-        // B2 confirmă că ștergerea este completă.
+        if (objects.length) await deleteB2Objects(objects);
+
+        if (response.IsTruncated) {
+            return res.json({
+                success: true,
+                done: false,
+                deletedReports: phase === "reports" ? objects.filter(item => item.Key.endsWith(".json")).length : 0,
+                deletedImages: phase === "images" ? objects.length : 0,
+                cursor: {
+                    phase,
+                    keyMarker: response.NextKeyMarker || undefined,
+                    versionIdMarker: response.NextVersionIdMarker || undefined
+                },
+                message: "Ștergerea continuă..."
+            });
+        }
+
+        if (phase === "images") {
+            return res.json({
+                success: true,
+                done: false,
+                deletedReports: 0,
+                deletedImages: objects.length,
+                cursor: { phase: "reports" },
+                message: "Imaginile au fost procesate. Se șterg rapoartele..."
+            });
+        }
+
+        // Am terminat ambele prefixe. Nu facem o scanare completă suplimentară,
+        // care ar putea depăși din nou limita CPU. Cache-ul este golit la final.
         clearB2ReportCache();
-
-        console.log(
-            `[B2] Ștergere globală completă: ${reportVersions.length} versiuni rapoarte, ${imageVersions.length} versiuni imagini.`
-        );
-
+        console.log("[B2] Ștergerea globală a rapoartelor și imaginilor a fost finalizată în loturi.");
         return res.json({
             success: true,
-            deletedReports: reportVersions.filter(
-                item => item.Key.endsWith(".json")
-            ).length,
-            deletedImages: imageVersions.length,
-            message:
-                "Toate rapoartele și toate imaginile au fost șterse definitiv din site și Backblaze B2."
+            done: true,
+            deletedReports: objects.filter(item => item.Key.endsWith(".json")).length,
+            deletedImages: 0,
+            cursor: null,
+            message: "Procesarea ștergerii s-a încheiat."
         });
-    }
-    catch (error) {
-        console.error(
-            "Delete All Reports B2 Error:",
-            error
-        );
-
+    } catch (error) {
+        console.error("Delete All Reports B2 Error:", error?.message || error);
         return res.status(500).json({
-            error:
-                "Rapoartele nu au putut fi șterse complet din Backblaze B2. Nimic nu este raportat ca șters până când B2 nu confirmă operația."
+            error: "Ștergerea rapoartelor s-a oprit. Poți relua operația; loturile deja procesate nu vor fi restaurate."
         });
     }
 }
