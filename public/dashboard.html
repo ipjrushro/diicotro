@@ -31769,37 +31769,51 @@ const query =
                     button.textContent = "SE ȘTERG...";
                 }
 
-                const response = await fetch(
-                    "/api/admin/reports/all",
-                    {
-                        method: "POST",
-                        credentials: "include",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            confirmation: "STERGE RAPOARTELE"
-                        })
+                let cursor = null;
+                let totalDeletedReports = 0;
+                let totalDeletedImages = 0;
+                let done = false;
+                let rounds = 0;
+
+                // Fiecare request șterge un lot mic, evitând limita CPU a Worker-ului.
+                while (!done) {
+                    const response = await fetch(
+                        "/api/admin/reports/all",
+                        {
+                            method: "POST",
+                            credentials: "include",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                confirmation: "STERGE RAPOARTELE",
+                                cursor
+                            })
+                        }
+                    );
+
+                    const responseText = await response.text();
+                    let data = null;
+                    try {
+                        data = responseText ? JSON.parse(responseText) : null;
+                    } catch {
+                        throw new Error(
+                            `Serverul nu a răspuns cu JSON (HTTP ${response.status}). Verifică logurile Worker-ului DIICOT.`
+                        );
                     }
-                );
 
-                // API-ul trebuie să răspundă JSON. Dacă hosting-ul întoarce HTML
-                // (de exemplu o pagină 404), afișăm un mesaj util în locul erorii
-                // criptice „Unexpected token <”.
-                const responseText = await response.text();
-                let data = null;
-                try {
-                    data = responseText ? JSON.parse(responseText) : null;
-                } catch {
-                    throw new Error(
-                        `Serverul nu a răspuns cu JSON (HTTP ${response.status}). Verifică deploy-ul Worker-ului DIICOT.`
-                    );
-                }
+                    if (!response.ok || !data?.success) {
+                        throw new Error(data?.error || `Ștergerea a eșuat (HTTP ${response.status}).`);
+                    }
 
-                if (!response.ok) {
-                    throw new Error(
-                        data?.error || "Rapoartele nu au putut fi șterse."
-                    );
+                    totalDeletedReports += Number(data.deletedReports || 0);
+                    totalDeletedImages += Number(data.deletedImages || 0);
+                    cursor = data.cursor || null;
+                    done = data.done === true;
+                    rounds++;
+                    if (button) {
+                        button.textContent = done
+                            ? "FINALIZAT"
+                            : `SE ȘTERG... (${rounds} loturi)`;
+                    }
                 }
 
                 if (typeof loadAdminReports === "function") {
@@ -31815,7 +31829,7 @@ const query =
                 }
 
                 alert(
-                    `Gata. ${Number(data.deletedReports || 0)} rapoarte au fost șterse. DOCS a rămas neschimbat.`
+                    `Procesare terminată. Au fost șterse ${totalDeletedReports} rapoarte și ${totalDeletedImages} imagini. DOCS a rămas neschimbat.`
                 );
             }
             catch (error) {
@@ -33727,7 +33741,7 @@ const query =
                 }
 
                 const params = new URLSearchParams();
-                params.set("limit", "5");
+                params.set("limit", "20");
                 if (cursor) params.set("cursor", cursor);
 
                 const reportsResponse = await fetch(
@@ -33748,24 +33762,7 @@ const query =
                     );
                 }
 
-                // Citim întâi textul: dacă Worker/Cloudflare întoarce un corp gol
-                // sau HTML în loc de JSON, afișăm o eroare clară, nu SyntaxError.
-                const responseText = await reportsResponse.text();
-                let payload;
-                try {
-                    payload = responseText ? JSON.parse(responseText) : null;
-                } catch {
-                    throw new Error(
-                        `Răspuns invalid la pagina ${page} (HTTP ${reportsResponse.status}). ` +
-                        `Răspunsul nu este JSON valid. Încearcă din nou; dacă persistă, verifică logurile Worker.`
-                    );
-                }
-                if (!payload || typeof payload !== "object") {
-                    throw new Error(
-                        `Răspuns gol la pagina ${page} (HTTP ${reportsResponse.status}). ` +
-                        `Exportul s-a oprit fără să modifice rapoartele.`
-                    );
-                }
+                const payload = await reportsResponse.json();
                 const rows = Array.isArray(payload?.reports)
                     ? payload.reports
                     : [];
