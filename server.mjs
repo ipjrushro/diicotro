@@ -11055,6 +11055,7 @@ app.patch(
 
                         return {
                             ...current,
+                            rank: String(item.rank ?? current.rank ?? "").trim().slice(0, 80),
                             full_name: String(item.fullName || "").trim().slice(0, 120),
                             internal_id: String(item.internalId || "").trim().slice(0, 40),
                             callsign: String(item.callsign || "").trim().slice(0, 20),
