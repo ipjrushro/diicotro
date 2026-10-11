@@ -33727,7 +33727,7 @@ const query =
                 }
 
                 const params = new URLSearchParams();
-                params.set("limit", "20");
+                params.set("limit", "5");
                 if (cursor) params.set("cursor", cursor);
 
                 const reportsResponse = await fetch(
@@ -33748,7 +33748,24 @@ const query =
                     );
                 }
 
-                const payload = await reportsResponse.json();
+                // Citim întâi textul: dacă Worker/Cloudflare întoarce un corp gol
+                // sau HTML în loc de JSON, afișăm o eroare clară, nu SyntaxError.
+                const responseText = await reportsResponse.text();
+                let payload;
+                try {
+                    payload = responseText ? JSON.parse(responseText) : null;
+                } catch {
+                    throw new Error(
+                        `Răspuns invalid la pagina ${page} (HTTP ${reportsResponse.status}). ` +
+                        `Răspunsul nu este JSON valid. Încearcă din nou; dacă persistă, verifică logurile Worker.`
+                    );
+                }
+                if (!payload || typeof payload !== "object") {
+                    throw new Error(
+                        `Răspuns gol la pagina ${page} (HTTP ${reportsResponse.status}). ` +
+                        `Exportul s-a oprit fără să modifice rapoartele.`
+                    );
+                }
                 const rows = Array.isArray(payload?.reports)
                     ? payload.reports
                     : [];
