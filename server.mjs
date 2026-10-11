@@ -5109,9 +5109,11 @@ app.get(
             const page = await listB2ReportsPage(
                 null,
                 req.query.cursor || null,
+                // Pagini mai mici reduc subrequest-urile B2 per invocare
+                // și evită răspunsuri întrerupte la exporturile mari.
                 Math.min(
-                    20,
-                    Math.max(1, Number(req.query.limit) || 20)
+                    5,
+                    Math.max(1, Number(req.query.limit) || 5)
                 )
             );
 
