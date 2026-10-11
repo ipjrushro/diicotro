@@ -3666,6 +3666,17 @@
             border-right: 0;
         }
 
+        .docs-rank-edit {
+            min-width: 112px;
+            font-size: 10px !important;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-align: center;
+            color: #fff;
+            background: rgba(12, 32, 58, .95);
+            border: 1px solid rgba(233, 185, 73, .55);
+        }
+
         .docs-rank-cell {
             padding: 0 !important;
         }
@@ -17720,12 +17731,18 @@ const query =
                             <tr data-docs-row="${escapeHTML(row.id)}">
 
                                 <td class="docs-rank-cell">
-                                    <div
-                                        class="docs-rank-badge"
-                                        data-level="${level}"
-                                    >
-                                        ${escapeHTML(row.rank || "—")}
-                                    </div>
+                                    ${
+                                        canEdit
+                                            ? `<input
+                                                class="docs-row-input docs-rank-edit"
+                                                data-field="rank"
+                                                value="${escapeHTML(docsValue(row.rank))}"
+                                                aria-label="Grad DIICOT"
+                                                placeholder="Ex. INSPECTOR"
+                                                ${disabled}
+                                            >`
+                                            : `<div class="docs-rank-badge" data-level="${level}">${escapeHTML(row.rank || "—")}</div>`
+                                    }
                                 </td>
 
                                 <td>
@@ -17874,6 +17891,9 @@ const query =
                 );
 
         return {
+            rank:
+                get("rank")?.value?.trim() || "",
+
             fullName:
                 get("fullName")?.value?.trim() || "",
 
