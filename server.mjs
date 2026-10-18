@@ -5091,7 +5091,7 @@ app.get(
 // ======================================================
 // EXPORT RAPOARTE — PAGINĂ LIGHTWEIGHT / CLOUDFLARE SAFE
 // Pentru TXT nu avem nevoie de URL-urile pozelor.
-// O pagină = 1 ListObjects + max. 20 citiri JSON B2.
+// O pagină = 1 ListObjects + maximum 4 citiri JSON B2.
 // Browserul cere paginile pe rând, deci 1000+ rapoarte nu ajung
 // niciodată într-o singură invocare Worker.
 // ======================================================
@@ -5110,8 +5110,8 @@ app.get(
                 null,
                 req.query.cursor || null,
                 Math.min(
-                    20,
-                    Math.max(1, Number(req.query.limit) || 20)
+                    4,
+                    Math.max(1, Number(req.query.limit) || 4)
                 )
             );
 
