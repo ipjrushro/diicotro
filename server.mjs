@@ -5354,7 +5354,7 @@ async function deleteAllReportsHandler(req, res) {
             Prefix: prefix,
             KeyMarker: keyMarker,
             VersionIdMarker: versionIdMarker,
-            MaxKeys: 25
+            MaxKeys: 5
         }));
 
         const objects = [];
