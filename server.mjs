@@ -1305,16 +1305,23 @@ function resolveHighestDIICOTRoleSafe(roles = []) {
                 String(roleId)
             );
 
+        // La nivel egal, ordinea din DIICOT_ROLES decide prioritatea:
+        // Procuror Adjunct DIICOT trebuie să fie afișat peste Procuror DIICOT.
+        const matchPriority = match ? DIICOT_ROLES.indexOf(match) : Infinity;
+        const bestPriority = best ? DIICOT_ROLES.indexOf(best) : Infinity;
+
         if (
             match &&
             (
                 !best ||
-                Number(match.level) >
-                Number(best.level)
+                Number(match.level) > Number(best.level) ||
+                (
+                    Number(match.level) === Number(best.level) &&
+                    matchPriority < bestPriority
+                )
             )
         ) {
-            best =
-                match;
+            best = match;
         }
     }
 
