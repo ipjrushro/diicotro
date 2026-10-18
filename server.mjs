@@ -282,6 +282,11 @@ const DIICOT_ROLES = [
         level: 12
     },
     {
+        id: "1561429569314230363",
+        name: "PROCUROR ADJUNCT DIICOT",
+        level: 11
+    },
+    {
         id: "1528758226420633744",
         name: "PROCUROR DIICOT",
         level: 11
@@ -355,8 +360,9 @@ const REPORT_ORGANIZER_DEPARTMENTS = {
         { id: "1528758226416435217", name: "COMISAR ȘEF DIICOT", weight: 6 },
         { id: "1528758226416435219", name: "COORDONATOR DIICOT", weight: 7 },
         { id: "1528758226420633744", name: "PROCUROR DIICOT", weight: 8 },
-        { id: "1528758226420633745", name: "PROCUROR ȘEF ADJUNCT DIICOT", weight: 9 },
-        { id: "1528758226420633746", name: "PROCUROR ȘEF DIICOT", weight: 10 }
+        { id: "1561429569314230363", name: "PROCUROR ADJUNCT DIICOT", weight: 9 },
+        { id: "1528758226420633745", name: "PROCUROR ȘEF ADJUNCT DIICOT", weight: 10 },
+        { id: "1528758226420633746", name: "PROCUROR ȘEF DIICOT", weight: 11 }
     ],
 
     POLITIE: [
@@ -5354,6 +5360,7 @@ async function deleteAllReportsHandler(req, res) {
             Prefix: prefix,
             KeyMarker: keyMarker,
             VersionIdMarker: versionIdMarker,
+            // Lot foarte mic: reduce riscul limitei CPU în Cloudflare Workers.
             MaxKeys: 5
         }));
 
