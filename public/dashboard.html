@@ -16683,7 +16683,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         container.innerHTML =
             events
@@ -17356,7 +17356,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                 Number(
                     currentUser.rankLevel ||
                     0
-                ) >= 10;
+                ) >= 6;
 
 
             document.body.classList.toggle(
@@ -17519,7 +17519,7 @@ document
         return Number(
             currentUser?.rankLevel ||
             0
-        ) >= 10;
+        ) >= 6;
     }
 
 
@@ -18544,7 +18544,7 @@ const query =
             personnel: () => loadPersonnel(),
             leave: async () => {
                 await loadLeave();
-                if (Number(currentUser?.rankLevel || 0) >= 10) {
+                if (Number(currentUser?.rankLevel || 0) >= 6) {
                     await loadAdminLeave();
                 }
             },
@@ -20171,7 +20171,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10 ||
+            ) >= 6 ||
             roles.includes(
                 TESTER_DIICOT_ROLE_ID
             )
@@ -20200,7 +20200,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         if (
             [
@@ -20237,7 +20237,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         const testerAccess =
             Boolean(
@@ -20316,7 +20316,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         if (
             isLeadership
@@ -20414,7 +20414,7 @@ const query =
         if (!container) return;
 
         const canEdit =
-            Number(currentUser?.rankLevel || 0) >= 10;
+            Number(currentUser?.rankLevel || 0) >= 6;
 
         if (!(tmData.categories || []).length) {
             container.innerHTML =
@@ -23400,7 +23400,7 @@ const query =
                                                                 Number(
                                                                     currentUser?.rankLevel ||
                                                                     0
-                                                                ) >= 10 &&
+                                                                ) >= 6 &&
                                                                 String(
                                                                     member.id
                                                                 ) !==
@@ -24188,7 +24188,7 @@ const query =
                 Number(
                     profile.rankLevel ||
                     0
-                ) >= 10
+                ) >= 6
                     ? "CONDUCERE"
                     : "MEMBRU";
         }
@@ -24521,7 +24521,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10 &&
+            ) >= 6 &&
 
             profile?.id &&
 
@@ -25495,7 +25495,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10
+            ) >= 6
         ) {
 
             await loadAdminLeave();
@@ -28083,7 +28083,7 @@ const query =
                         profile.rankLevel ||
                         currentUser?.rankLevel ||
                         0
-                    ) >= 10
+                    ) >= 6
 
                         ? "CONDUCERE"
 
