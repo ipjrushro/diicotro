@@ -1394,7 +1394,7 @@ function normalizeCallsign(value) {
     if (
         !Number.isInteger(number) ||
         number < 1 ||
-        number > 99
+        number > 33
     ) {
         return null;
     }
@@ -2598,64 +2598,17 @@ function mapLeaveRequest(row) {
 
 
 function getDocsRankForSlot(number) {
-
     const slot = Number(number);
 
-    if (slot === 1) {
-        return { name: "PROCUROR ȘEF", level: 13 };
-    }
-
-    if (slot === 2) {
-        return { name: "PROCUROR ȘEF ADJUNCT", level: 12 };
-    }
-
-    if (slot === 3) {
-        return { name: "PROCUROR ADJUNCT", level: 11 };
-    }
-
-    if (slot >= 4 && slot <= 5) {
-        return { name: "PROCUROR", level: 11 };
-    }
-
-    if (slot >= 6 && slot <= 7) {
-        return { name: "COORDONATOR", level: 10 };
-    }
-
-    if (slot >= 8 && slot <= 10) {
-        return { name: "COMISAR ȘEF", level: 9 };
-    }
-
-    if (slot >= 11 && slot <= 14) {
-        return { name: "COMISAR", level: 8 };
-    }
-
-    if (slot >= 15 && slot <= 19) {
-        return { name: "SUB-COMISAR", level: 7 };
-    }
-
-    if (slot >= 20 && slot <= 24) {
-        return { name: "INSPECTOR PRINCIPAL", level: 6 };
-    }
-
-    if (slot >= 25 && slot <= 28) {
-        return { name: "INSPECTOR", level: 5 };
-    }
-
-    if (slot >= 29 && slot <= 34) {
-        return { name: "SUB INSPECTOR", level: 4 };
-    }
-
-    if (slot >= 35 && slot <= 44) {
-        return { name: "AGENT PRINCIPAL", level: 3 };
-    }
-
-    if (slot >= 45 && slot <= 62) {
-        return { name: "AGENT OPERATIV", level: 2 };
-    }
-
-    if (slot >= 63 && slot <= 99) {
-        return { name: "AGENT STAGIAR", level: 1 };
-    }
+    if (slot === 1) return { name: "PROCUROR ȘEF", level: 13 };
+    if (slot >= 2 && slot <= 3) return { name: "PROCUROR ȘEF ADJUNCT", level: 12 };
+    if (slot >= 4 && slot <= 5) return { name: "PROCUROR", level: 11 };
+    if (slot >= 6 && slot <= 7) return { name: "COORDONATOR", level: 10 };
+    if (slot >= 8 && slot <= 9) return { name: "COMISAR-ȘEF", level: 9 };
+    if (slot >= 10 && slot <= 12) return { name: "COMISAR", level: 8 };
+    if (slot >= 13 && slot <= 17) return { name: "INSPECTOR", level: 5 };
+    if (slot >= 18 && slot <= 22) return { name: "AGENT PRINCIPAL", level: 3 };
+    if (slot >= 23 && slot <= 33) return { name: "AGENT STAGIAR", level: 1 };
 
     return { name: "", level: 0 };
 }
@@ -11693,7 +11646,7 @@ function docsSlotFromCallsign(value) {
     if (!match) return null;
 
     const number = Number(match[1]);
-    if (number < 1 || number > 99) return null;
+    if (number < 1 || number > 33) return null;
 
     return {
         number,
@@ -11747,7 +11700,7 @@ async function syncDocsInBatches(editorId, editorName) {
     let moved = 0;
     let removed = 0;
 
-    for (let number = 1; number <= 99; number += 1) {
+    for (let number = 1; number <= 33; number += 1) {
         const callsign = `D-${String(number).padStart(2, "0")}`;
         const target = existingByCallsign.get(callsign) || null;
         const member = membersByCallsign.get(callsign) || null;
@@ -11858,7 +11811,7 @@ async function syncDocsInBatches(editorId, editorName) {
     }
 
     // Ștergem doar rândurile care nu mai reprezintă unul dintre sloturile
-    // D-01..D-99 (duplicate/înregistrări vechi).
+    // D-01..D-33 (duplicate/înregistrări vechi).
     const keepIds = new Set(upsertRows.map(row => String(row.id)));
     const staleIds = existingRows
         .filter(row => !keepIds.has(String(row.id)))
@@ -11880,7 +11833,7 @@ async function syncDocsInBatches(editorId, editorName) {
         assigned,
         moved,
         removed,
-        totalSlots: 99,
+        totalSlots: 33,
         message: `Sincronizare completă: ${assigned} membri activi, ${moved} mutați după callsign/UP, ${removed} eliminați din sloturile DIICOT.`
     };
 }
@@ -11990,7 +11943,7 @@ app.post(
 
                 if (
                     number < 1 ||
-                    number > 99
+                    number > 33
                 ) {
                     return null;
                 }
@@ -12005,7 +11958,7 @@ app.post(
 
 
             // --------------------------------------------------
-            // 2. Creăm toate sloturile D-01 ... D-99 lipsă.
+            // 2. Creăm toate sloturile D-01 ... D-33 lipsă.
             // --------------------------------------------------
 
             const existingCallsigns =
@@ -12025,7 +11978,7 @@ app.post(
 
             for (
                 let number = 1;
-                number <= 99;
+                number <= 33;
                 number++
             ) {
 
@@ -12163,7 +12116,7 @@ app.post(
                 [];
 
 
-            // Orice rând fără callsign valid este pus după D-99.
+            // Orice rând fără callsign valid este pus după D-33.
             const invalidPositionRows =
                 rows.filter(
                     row =>
@@ -12200,7 +12153,7 @@ app.post(
 
 
             // --------------------------------------------------
-            // 2.1 Actualizăm gradul fiecărui slot D-01 ... D-99
+            // 2.1 Actualizăm gradul fiecărui slot D-01 ... D-33
             // după schema fixă DOCS.
             // --------------------------------------------------
 
@@ -13321,7 +13274,7 @@ app.patch(
 
         if (!requestId || !callsign) {
             return res.status(400).json({
-                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-99."
+                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-33."
             });
         }
 
