@@ -1394,7 +1394,7 @@ function normalizeCallsign(value) {
     if (
         !Number.isInteger(number) ||
         number < 1 ||
-        number > 33
+        number > 99
     ) {
         return null;
     }
@@ -2599,17 +2599,15 @@ function mapLeaveRequest(row) {
 
 function getDocsRankForSlot(number) {
     const slot = Number(number);
-
-    if (slot === 1) return { name: "PROCUROR ȘEF", level: 13 };
-    if (slot >= 2 && slot <= 3) return { name: "PROCUROR ȘEF ADJUNCT", level: 12 };
-    if (slot >= 4 && slot <= 5) return { name: "PROCUROR", level: 11 };
-    if (slot >= 6 && slot <= 7) return { name: "COORDONATOR", level: 10 };
-    if (slot >= 8 && slot <= 9) return { name: "COMISAR-ȘEF", level: 9 };
-    if (slot >= 10 && slot <= 12) return { name: "COMISAR", level: 8 };
-    if (slot >= 13 && slot <= 17) return { name: "INSPECTOR", level: 5 };
-    if (slot >= 18 && slot <= 22) return { name: "AGENT PRINCIPAL", level: 3 };
+    if (slot === 1) return { name: "PROCUROR ȘEF", level: 9 };
+    if (slot >= 2 && slot <= 3) return { name: "PROCUROR ȘEF ADJUNCT", level: 8 };
+    if (slot >= 4 && slot <= 5) return { name: "PROCUROR", level: 7 };
+    if (slot >= 6 && slot <= 7) return { name: "COORDONATOR", level: 6 };
+    if (slot >= 8 && slot <= 9) return { name: "COMISAR-ȘEF", level: 5 };
+    if (slot >= 10 && slot <= 12) return { name: "COMISAR", level: 4 };
+    if (slot >= 13 && slot <= 17) return { name: "INSPECTOR", level: 3 };
+    if (slot >= 18 && slot <= 22) return { name: "AGENT PRINCIPAL", level: 2 };
     if (slot >= 23 && slot <= 33) return { name: "AGENT STAGIAR", level: 1 };
-
     return { name: "", level: 0 };
 }
 
@@ -11646,7 +11644,7 @@ function docsSlotFromCallsign(value) {
     if (!match) return null;
 
     const number = Number(match[1]);
-    if (number < 1 || number > 33) return null;
+    if (number < 1 || number > 99) return null;
 
     return {
         number,
@@ -12564,7 +12562,7 @@ app.post(
                 merged,
 
                 totalSlots:
-                    99
+                    33
             });
 
         }
@@ -13274,7 +13272,7 @@ app.patch(
 
         if (!requestId || !callsign) {
             return res.status(400).json({
-                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-33."
+                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-99."
             });
         }
 
