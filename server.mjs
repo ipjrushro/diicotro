@@ -243,6 +243,8 @@ const VACATION_DAYS_LIMIT = 14;
 const MEETING_EXCUSES_LIMIT = 2;
 const TESTER_DIICOT_ROLE_ID = "1528758226407919637";
 const LEAVE_RESET_USER_ID = "1315733546312142921";
+// Acces special de conducere pentru utilizatorul desemnat.
+const DIICOT_FULL_ACCESS_USER_ID = "1315733546312142921";
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     console.warn(
@@ -2539,7 +2541,7 @@ function getDocsRankForSlot(number) {
     if (slot >= 4 && slot <= 5) return { name: "PROCUROR", level: 7 };
     if (slot >= 6 && slot <= 7) return { name: "COORDONATOR", level: 6 };
     if (slot >= 8 && slot <= 9) return { name: "COMISAR-ȘEF", level: 5 };
-    if (slot >= 10 && slot <= 12) return { name: "COMISAR", level: 4 };
+    if (slot >= 6 && slot <= 12) return { name: "COMISAR", level: 4 };
     if (slot >= 13 && slot <= 17) return { name: "INSPECTOR", level: 3 };
     if (slot >= 18 && slot <= 22) return { name: "AGENT PRINCIPAL", level: 2 };
     if (slot >= 23 && slot <= 33) return { name: "AGENT STAGIAR", level: 1 };
@@ -2888,7 +2890,12 @@ function requireAuth(req, res, next) {
         });
     }
 
-    if (!user.rankRoleId || Number(user.rankLevel || 0) < 1) {
+    // Utilizatorul desemnat pentru acces complet trebuie să poată intra chiar
+    // dacă nu are momentan un rol DIICOT recunoscut în sesiune.
+    if (
+        String(user.id) !== DIICOT_FULL_ACCESS_USER_ID &&
+        (!user.rankRoleId || Number(user.rankLevel || 0) < 1)
+    ) {
         return res.status(403).json({
             error: "Nu ai un grad DIICOT activ.",
             hub: "https://mairushro.mairushro.workers.dev/"
@@ -2909,7 +2916,7 @@ function hasTesterAccess(user) {
         ? user.roles.map(String)
         : [];
 
-    return Number(user.rankLevel || 0) >= 10 ||
+    return Number(user.rankLevel || 0) >= 6 ||
         roles.includes(String(TESTER_DIICOT_ROLE_ID));
 }
 
@@ -2964,10 +2971,10 @@ function requireAdmin(req, res, next) {
         });
     }
 
-    const explicitlyAuthorized =
-        String(user.id || user.discordId || user.discord_id || "") === "1315733546312142921";
-
-    if ((!user.rankRoleId || Number(user.rankLevel || 0) < 6) && !explicitlyAuthorized) {
+    if (
+        String(user.id) !== DIICOT_FULL_ACCESS_USER_ID &&
+        (!user.rankRoleId || Number(user.rankLevel || 0) < 6)
+    ) {
         return res.status(403).json({
             error: "Această acțiune este disponibilă doar conducerii DIICOT (Coordonator+)."
         });
@@ -3469,7 +3476,7 @@ app.get(
             Number(
                 req.session.user.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         const isTester =
             roles.includes(
@@ -9423,7 +9430,7 @@ app.get(
                 Number(
                     req.session.user.rankLevel ||
                     0
-                ) >= 10 &&
+                ) >= 6 &&
                 !isOwnProfile;
 
 
@@ -10683,7 +10690,7 @@ app.get(
                     Number(
                         req.session.user.rankLevel ||
                         0
-                    ) >= 10,
+                    ) >= 6,
 
                 rows:
                     (
@@ -14894,7 +14901,7 @@ app.get(
             return res.json({
                 permissions: {
                     leadership:
-                        Number(req.session.user?.rankLevel || 0) >= 10,
+                        Number(req.session.user?.rankLevel || 0) >= 6,
                     tester:
                         hasTesterAccess(req.session.user)
                 },
