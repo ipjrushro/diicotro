@@ -16683,7 +16683,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6;
+            ) >= 10;
 
         container.innerHTML =
             events
@@ -17353,10 +17353,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
 
 
             const isAdmin =
-                Number(
-                    currentUser.rankLevel ||
-                    0
-                ) >= 6;
+                (String(currentUser?.id || "") === "1315733546312142921" || Number(currentUser?.rankLevel || 0) >= 6);
 
 
             document.body.classList.toggle(
@@ -17519,7 +17516,7 @@ document
         return Number(
             currentUser?.rankLevel ||
             0
-        ) >= 6;
+        ) >= 10;
     }
 
 
@@ -18544,7 +18541,7 @@ const query =
             personnel: () => loadPersonnel(),
             leave: async () => {
                 await loadLeave();
-                if (Number(currentUser?.rankLevel || 0) >= 6) {
+                if (String(currentUser?.id || "") === "1315733546312142921" || Number(currentUser?.rankLevel || 0) >= 6) {
                     await loadAdminLeave();
                 }
             },
@@ -18777,11 +18774,6 @@ const query =
 
 
 
-    function hasDiicotLeadershipAccess(user = currentUser) {
-        return String(user?.id || "") === "1315733546312142921" ||
-            Number(user?.rankLevel || 0) >= 6;
-    }
-
     function bindHomeActionCards() {
         document
             .querySelectorAll("[data-home-section]")
@@ -18791,7 +18783,7 @@ const query =
 
                     if (
                         (section === "admin" || section === "blacklist" || section === "complaints-admin") &&
-                        !hasDiicotLeadershipAccess()
+                        (String(currentUser?.id || "") !== "1315733546312142921" && Number(currentUser?.rankLevel || 0) < 6)
                     ) {
                         return;
                     }
@@ -20176,7 +20168,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6 ||
+            ) >= 10 ||
             roles.includes(
                 TESTER_DIICOT_ROLE_ID
             )
@@ -20205,7 +20197,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6;
+            ) >= 10;
 
         if (
             [
@@ -20242,7 +20234,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6;
+            ) >= 10;
 
         const testerAccess =
             Boolean(
@@ -20321,7 +20313,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6;
+            ) >= 10;
 
         if (
             isLeadership
@@ -20419,7 +20411,7 @@ const query =
         if (!container) return;
 
         const canEdit =
-            Number(currentUser?.rankLevel || 0) >= 6;
+            Number(currentUser?.rankLevel || 0) >= 10;
 
         if (!(tmData.categories || []).length) {
             container.innerHTML =
@@ -23405,7 +23397,7 @@ const query =
                                                                 Number(
                                                                     currentUser?.rankLevel ||
                                                                     0
-                                                                ) >= 6 &&
+                                                                ) >= 10 &&
                                                                 String(
                                                                     member.id
                                                                 ) !==
@@ -24193,7 +24185,7 @@ const query =
                 Number(
                     profile.rankLevel ||
                     0
-                ) >= 6
+                ) >= 10
                     ? "CONDUCERE"
                     : "MEMBRU";
         }
@@ -24526,7 +24518,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6 &&
+            ) >= 10 &&
 
             profile?.id &&
 
@@ -25500,7 +25492,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 6
+            ) >= 10
         ) {
 
             await loadAdminLeave();
@@ -28088,7 +28080,7 @@ const query =
                         profile.rankLevel ||
                         currentUser?.rankLevel ||
                         0
-                    ) >= 6
+                    ) >= 10
 
                         ? "CONDUCERE"
 
@@ -31771,7 +31763,7 @@ const query =
         .getElementById("admin-delete-all-reports")
         ?.addEventListener("click", async () => {
 
-            if (!hasDiicotLeadershipAccess()) {
+            if ((String(currentUser?.id || "") !== "1315733546312142921" && Number(currentUser?.rankLevel || 0) < 6)) {
                 return;
             }
 
@@ -32216,7 +32208,7 @@ const query =
     }
 
     window.loadAdminComplaints = async function loadAdminComplaints() {
-        if (!hasDiicotLeadershipAccess()) return;
+        if ((String(currentUser?.id || "") !== "1315733546312142921" && Number(currentUser?.rankLevel || 0) < 6)) return;
 
         const body = document.getElementById("complaints-admin-list");
         if (body) {
