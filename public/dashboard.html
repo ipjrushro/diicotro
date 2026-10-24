@@ -17664,9 +17664,9 @@ const query =
         const occupiedDocs = docsRows.filter(row => {
             const callsign = String(row?.callsign || "").trim();
             const hasIdentity = Boolean(String(row?.fullName || "").trim() || String(row?.discord || "").trim() || String(row?.internalId || "").trim());
-            return /^D-(?:0?[1-9]|[1-9]\d)$/.test(callsign) && hasIdentity;
+            return /^D-(?:0?[1-9]|[12]\d|3[0-3])$/.test(callsign) && hasIdentity;
         }).length;
-        const slotsDocs = 99;
+        const slotsDocs = 33;
         const occupiedEl = document.getElementById("docs-stat-occupied");
         const freeEl = document.getElementById("docs-stat-free");
         const slotsEl = document.getElementById("docs-stat-slots");
@@ -24982,7 +24982,7 @@ const query =
 
                 if (
                     number < 1 ||
-                    number > 33
+                    number > 99
                 ) {
 
                     message.className =
