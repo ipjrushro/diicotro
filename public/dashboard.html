@@ -11836,7 +11836,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                             <h3>CERERI CALLSIGN</h3>
                             <p>
                                 COORDONATOR+ poate verifica cererile și acorda
-                                callsign-uri D-01 — D-99.
+                                callsign-uri D-01 — D-33.
                             </p>
                             <span class="home-action-arrow">→</span>
                         </button>
@@ -13079,11 +13079,11 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                     <div class="docs-render-intro">
                         <span>CENTRU DE EVIDENȚĂ • DIICOT</span>
                         <h3>Personal într-un singur registru.</h3>
-                        <p>Call sign-urile D-01 – D-99 sunt așezate automat după nickname-ul Discord. Mutările eliberează slotul vechi.</p>
+                        <p>Call sign-urile D-01 – D-33 sunt așezate automat după nickname-ul Discord. Mutările eliberează slotul vechi.</p>
                     </div>
-                    <div class="docs-render-stat"><span>SLOTURI</span><strong id="docs-stat-slots">99</strong><small>D-01 — D-99</small></div>
+                    <div class="docs-render-stat"><span>SLOTURI</span><strong id="docs-stat-slots">33</strong><small>D-01 — D-33</small></div>
                     <div class="docs-render-stat"><span>OCUPATE</span><strong id="docs-stat-occupied">0</strong><small>membri sincronizați</small></div>
-                    <div class="docs-render-stat"><span>LIBERE</span><strong id="docs-stat-free">99</strong><small>disponibile</small></div>
+                    <div class="docs-render-stat"><span>LIBERE</span><strong id="docs-stat-free">33</strong><small>disponibile</small></div>
                 </div>
 
                 <div class="docs-toolbar">
@@ -13102,8 +13102,8 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                             class="personnel-summary"
                             style="margin:0;"
                         >
-                            <span>SLOTURI D-01 — D-99</span>
-                            <strong>99</strong>
+                            <span>SLOTURI D-01 — D-33</span>
+                            <strong>33</strong>
                         </span>
 
                     </div>
@@ -15441,7 +15441,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                         <h3>CERERE CALLSIGN</h3>
                         <p>
                             Solicită conducerii acordarea unui identificativ
-                            operațional D-01 — D-99.
+                            operațional D-01 — D-33.
                         </p>
                     </div>
                 </div>
@@ -18407,7 +18407,7 @@ const query =
                     }
 
                     docsSetMessage(
-                        `Sincronizare finalizată: schema D-01 — D-99 și gradele aferente au fost actualizate. ${Number(data.assigned || 0)} membri au fost asociați pe callsign.`,
+                        `Sincronizare finalizată: schema D-01 — D-33 și gradele aferente au fost actualizate. ${Number(data.assigned || 0)} membri au fost asociați pe callsign.`,
                         "success"
                     );
 
@@ -24968,7 +24968,7 @@ const query =
                         "form-message error";
 
                     message.textContent =
-                        "Indicativ invalid. Folosește un număr între 01 și 99.";
+                        "Indicativ invalid. Folosește un număr între 01 și 33.";
 
                     return;
                 }
@@ -24982,14 +24982,14 @@ const query =
 
                 if (
                     number < 1 ||
-                    number > 99
+                    number > 33
                 ) {
 
                     message.className =
                         "form-message error";
 
                     message.textContent =
-                        "Indicativul trebuie să fie între D-01 și D-99.";
+                        "Indicativul trebuie să fie între D-01 și D-33.";
 
                     return;
                 }
