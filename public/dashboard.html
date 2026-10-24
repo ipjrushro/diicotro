@@ -16683,7 +16683,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         container.innerHTML =
             events
@@ -17355,7 +17355,7 @@ body:before{background:radial-gradient(circle at 80% 2%,rgba(69,119,178,.13),tra
                 Number(
                     currentUser.rankLevel ||
                     0
-                ) >= 10;
+                ) >= 6;
 
 
             document.body.classList.toggle(
@@ -17518,7 +17518,7 @@ document
         return Number(
             currentUser?.rankLevel ||
             0
-        ) >= 10;
+        ) >= 6;
     }
 
 
@@ -18543,7 +18543,7 @@ const query =
             personnel: () => loadPersonnel(),
             leave: async () => {
                 await loadLeave();
-                if (Number(currentUser?.rankLevel || 0) >= 10) {
+                if (Number(currentUser?.rankLevel || 0) >= 6) {
                     await loadAdminLeave();
                 }
             },
@@ -18785,7 +18785,7 @@ const query =
 
                     if (
                         (section === "admin" || section === "blacklist" || section === "complaints-admin") &&
-                        Number(currentUser?.rankLevel || 0) < 10
+                        Number(currentUser?.rankLevel || 0) < 6
                     ) {
                         return;
                     }
@@ -20199,7 +20199,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         if (
             [
@@ -20236,7 +20236,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         const testerAccess =
             Boolean(
@@ -20315,7 +20315,7 @@ const query =
             Number(
                 currentUser?.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         if (
             isLeadership
@@ -20413,7 +20413,7 @@ const query =
         if (!container) return;
 
         const canEdit =
-            Number(currentUser?.rankLevel || 0) >= 10;
+            Number(currentUser?.rankLevel || 0) >= 6;
 
         if (!(tmData.categories || []).length) {
             container.innerHTML =
@@ -31763,7 +31763,7 @@ const query =
         .getElementById("admin-delete-all-reports")
         ?.addEventListener("click", async () => {
 
-            if (Number(currentUser?.rankLevel || 0) < 10) {
+            if (Number(currentUser?.rankLevel || 0) < 6) {
                 return;
             }
 
@@ -32208,7 +32208,7 @@ const query =
     }
 
     window.loadAdminComplaints = async function loadAdminComplaints() {
-        if (Number(currentUser?.rankLevel || 0) < 10) return;
+        if (Number(currentUser?.rankLevel || 0) < 6) return;
 
         const body = document.getElementById("complaints-admin-list");
         if (body) {
