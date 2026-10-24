@@ -268,79 +268,18 @@ const supabase = createClient(
 
 // IMPORTANT: INSPECTOR ROLE IDS
 // INSPECTOR DIICOT           = 1528758226416435213 (level 5)
-// INSPECTOR PRINCIPAL DIICOT = 1528758226416435214 (level 6)
+// INSPECTOR DIICOT = 1528758226416435214 (level 6)
 // Nu inversa aceste două ID-uri.
 const DIICOT_ROLES = [
-    {
-        id: "1528758226420633746",
-        name: "PROCUROR ȘEF DIICOT",
-        level: 13
-    },
-    {
-        id: "1528758226420633745",
-        name: "PROCUROR ȘEF ADJUNCT DIICOT",
-        level: 12
-    },
-    {
-        id: "1561429569314230363",
-        name: "PROCUROR ADJUNCT DIICOT",
-        level: 11
-    },
-    {
-        id: "1528758226420633744",
-        name: "PROCUROR DIICOT",
-        level: 11
-    },
-    {
-        id: "1528758226416435219",
-        name: "COORDONATOR DIICOT",
-        level: 10
-    },
-    {
-        id: "1528758226416435217",
-        name: "COMISAR ȘEF DIICOT",
-        level: 9
-    },
-    {
-        id: "1528758226416435216",
-        name: "COMISAR DIICOT",
-        level: 8
-    },
-    {
-        id: "1528758226416435215",
-        name: "SUB COMISAR DIICOT",
-        level: 7
-    },
-    {
-        id: "1528758226416435214",
-        name: "INSPECTOR PRINCIPAL DIICOT",
-        level: 6
-    },
-    {
-        id: "1528758226416435213",
-        name: "INSPECTOR DIICOT",
-        level: 5
-    },
-    {
-        id: "1528758226416435211",
-        name: "SUB INSPECTOR DIICOT",
-        level: 4
-    },
-    {
-        id: "1528758226416435210",
-        name: "AGENT PRINCIPAL DIICOT",
-        level: 3
-    },
-    {
-        id: "1528758226407919645",
-        name: "AGENT OPERATIV DIICOT",
-        level: 2
-    },
-    {
-        id: "1528758226407919644",
-        name: "AGENT STAGIAR DIICOT",
-        level: 1
-    }
+    { id: "1528758226420633746", name: "PROCUROR ȘEF DIICOT", level: 9 },
+    { id: "1528758226420633745", name: "PROCUROR ȘEF ADJUNCT DIICOT", level: 8 },
+    { id: "1528758226420633744", name: "PROCUROR DIICOT", level: 7 },
+    { id: "1528758226416435219", name: "COORDONATOR DIICOT", level: 6 },
+    { id: "1528758226416435217", name: "COMISAR ȘEF DIICOT", level: 5 },
+    { id: "1528758226416435216", name: "COMISAR DIICOT", level: 4 },
+    { id: "1528758226416435213", name: "INSPECTOR DIICOT", level: 3 },
+    { id: "1528758226416435210", name: "AGENT PRINCIPAL DIICOT", level: 2 },
+    { id: "1528758226407919644", name: "AGENT STAGIAR DIICOT", level: 1 }
 ];
 
 
@@ -352,24 +291,24 @@ const DIICOT_ROLES = [
 
 const REPORT_ORGANIZER_DEPARTMENTS = {
     DIICOT: [
-        { id: "1528758226416435211", name: "SUB INSPECTOR DIICOT", weight: 1 },
+        { id: "1528758226416435211", name: "AGENT PRINCIPAL DIICOT", weight: 1 },
         { id: "1528758226416435213", name: "INSPECTOR DIICOT", weight: 2 },
-        { id: "1528758226416435214", name: "INSPECTOR PRINCIPAL DIICOT", weight: 3 },
-        { id: "1528758226416435215", name: "SUB COMISAR DIICOT", weight: 4 },
+        { id: "1528758226416435214", name: "INSPECTOR DIICOT", weight: 3 },
+        { id: "1528758226416435215", name: "COMISAR DIICOT", weight: 4 },
         { id: "1528758226416435216", name: "COMISAR DIICOT", weight: 5 },
         { id: "1528758226416435217", name: "COMISAR ȘEF DIICOT", weight: 6 },
         { id: "1528758226416435219", name: "COORDONATOR DIICOT", weight: 7 },
         { id: "1528758226420633744", name: "PROCUROR DIICOT", weight: 8 },
-        { id: "1561429569314230363", name: "PROCUROR ADJUNCT DIICOT", weight: 9 },
+        { id: "1561429569314230363", name: "PROCUROR DIICOT", weight: 9 },
         { id: "1528758226420633745", name: "PROCUROR ȘEF ADJUNCT DIICOT", weight: 10 },
         { id: "1528758226420633746", name: "PROCUROR ȘEF DIICOT", weight: 11 }
     ],
 
     POLITIE: [
-        { id: "1528758226428891362", name: "SUB INSPECTOR POLIȚIE", weight: 1 },
+        { id: "1528758226428891362", name: "AGENT PRINCIPAL POLIȚIE", weight: 1 },
         { id: "1528758226428891363", name: "INSPECTOR POLIȚIE", weight: 2 },
-        { id: "1528758226428891364", name: "INSPECTOR PRINCIPAL POLIȚIE", weight: 3 },
-        { id: "1528758226428891365", name: "SUB COMISAR POLIȚIE", weight: 4 },
+        { id: "1528758226428891364", name: "INSPECTOR POLIȚIE", weight: 3 },
+        { id: "1528758226428891365", name: "COMISAR POLIȚIE", weight: 4 },
         { id: "1528758226428891366", name: "COMISAR POLIȚIE", weight: 5 },
         { id: "1528758226428891368", name: "COMISAR ȘEF POLIȚIE", weight: 6 }
     ]
@@ -778,7 +717,7 @@ async function getGuildMembersCached(
 
 const PROMOTION_REQUIREMENTS = {
     1: {
-        nextRank: "AGENT OPERATIV DIICOT",
+        nextRank: "AGENT STAGIAR DIICOT",
         reports: 50,
         raids: 0,
         trainings: 0,
@@ -801,7 +740,7 @@ const PROMOTION_REQUIREMENTS = {
     },
 
     3: {
-        nextRank: "SUB INSPECTOR DIICOT",
+        nextRank: "AGENT PRINCIPAL DIICOT",
         reports: 100,
         raids: 0,
         trainings: 0,
@@ -827,7 +766,7 @@ const PROMOTION_REQUIREMENTS = {
     },
 
     5: {
-        nextRank: "INSPECTOR PRINCIPAL DIICOT",
+        nextRank: "INSPECTOR DIICOT",
         reports: 60,
         raids: 7,
         trainings: 3,
@@ -840,7 +779,7 @@ const PROMOTION_REQUIREMENTS = {
     },
 
     6: {
-        nextRank: "SUB COMISAR DIICOT",
+        nextRank: "COMISAR DIICOT",
         reports: 50,
         raids: 8,
         trainings: 2,
@@ -1394,7 +1333,7 @@ function normalizeCallsign(value) {
     if (
         !Number.isInteger(number) ||
         number < 1 ||
-        number > 99
+        number > 33
     ) {
         return null;
     }
@@ -2996,7 +2935,7 @@ function requireTester(req, res, next) {
     next();
 }
 
-// Sancțiunile pot fi gestionate de la SUB COMISAR DIICOT (level 7) în sus.
+// Sancțiunile pot fi gestionate de la COMISAR DIICOT (level 7) în sus.
 function requireSanctionManager(req, res, next) {
     const user = req.session?.user;
 
@@ -4629,7 +4568,7 @@ app.post(
             });
         }
 
-        // RAZIE / ANTRENAMENT normale pot fi postate doar de SUB INSPECTOR DIICOT+.
+        // RAZIE / ANTRENAMENT normale pot fi postate doar de AGENT PRINCIPAL DIICOT+.
         // Gradele mici (Agent Stagiar / Operativ / Principal) folosesc variantele DOVADĂ.
         const authorRankLevel =
             Number(
@@ -4651,7 +4590,7 @@ app.post(
         ) {
             return res.status(403).json({
                 error:
-                    "RAZIE și ANTRENAMENT pot fi postate doar de la SUB INSPECTOR DIICOT în sus. Pentru participare folosește DOVADĂ RAZIE / DOVADĂ ANTRENAMENT."
+                    "RAZIE și ANTRENAMENT pot fi postate doar de la AGENT PRINCIPAL DIICOT în sus. Pentru participare folosește DOVADĂ RAZIE / DOVADĂ ANTRENAMENT."
             });
         }
         if (
@@ -11644,7 +11583,7 @@ function docsSlotFromCallsign(value) {
     if (!match) return null;
 
     const number = Number(match[1]);
-    if (number < 1 || number > 99) return null;
+    if (number < 1 || number > 33) return null;
 
     return {
         number,
@@ -12562,7 +12501,7 @@ app.post(
                 merged,
 
                 totalSlots:
-                    33
+                    99
             });
 
         }
@@ -13272,7 +13211,7 @@ app.patch(
 
         if (!requestId || !callsign) {
             return res.status(400).json({
-                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-99."
+                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-33."
             });
         }
 
@@ -14127,7 +14066,7 @@ app.post(
 
 
 // ======================================================
-// ACTIVITĂȚI — SANCȚIUNI SUB COMISAR+
+// ACTIVITĂȚI — SANCȚIUNI COMISAR+
 // ======================================================
 
 
@@ -16012,10 +15951,10 @@ const INTER_TRANSFER_POLICE_ROLES = [
     { id: "1528758226437275786", name: "CHESTOR SECUNDAR", level: 12 },
     { id: "1528758226428891368", name: "COMISAR ȘEF", level: 11 },
     { id: "1528758226428891366", name: "COMISAR", level: 10 },
-    { id: "1528758226428891365", name: "SUB COMISAR", level: 9 },
-    { id: "1528758226428891364", name: "INSPECTOR PRINCIPAL", level: 8 },
+    { id: "1528758226428891365", name: "COMISAR", level: 9 },
+    { id: "1528758226428891364", name: "INSPECTOR", level: 8 },
     { id: "1528758226428891363", name: "INSPECTOR", level: 7 },
-    { id: "1528758226428891362", name: "SUB INSPECTOR", level: 6 },
+    { id: "1528758226428891362", name: "AGENT PRINCIPAL", level: 6 },
     { id: "1528758226428891361", name: "AGENT ȘEF PRINCIPAL", level: 5 },
     { id: "1528758226428891360", name: "AGENT ȘEF ADJUNCT", level: 4 },
     { id: "1528758226428891359", name: "AGENT PRINCIPAL", level: 3 },
