@@ -2909,8 +2909,7 @@ function hasTesterAccess(user) {
         ? user.roles.map(String)
         : [];
 
-    return String(user.id || "") === "1315733546312142921" ||
-        Number(user.rankLevel || 0) >= 6 ||
+    return Number(user.rankLevel || 0) >= 6 ||
         roles.includes(String(TESTER_DIICOT_ROLE_ID));
 }
 
@@ -2953,7 +2952,7 @@ function requireSanctionManager(req, res, next) {
 
 // ======================================================
 // ADMIN / CONDUCERE MIDDLEWARE
-// COORDONATOR DIICOT (level 6) sau mai sus; ID-ul autorizat are acces explicit.
+// COORDONATOR DIICOT (level 6) sau mai sus; acces explicit pentru ID autorizat.
 // ======================================================
 function requireAdmin(req, res, next) {
     const user = req.session?.user;
@@ -2965,10 +2964,12 @@ function requireAdmin(req, res, next) {
         });
     }
 
-    if (String(user.id || "") !== "1315733546312142921" &&
-        (!user.rankRoleId || Number(user.rankLevel || 0) < 6)) {
+    const isExplicitlyAuthorized = String(user.id || "") === "1315733546312142921";
+    const isCoordinatorOrAbove = Boolean(user.rankRoleId) && Number(user.rankLevel || 0) >= 6;
+
+    if (!isExplicitlyAuthorized && !isCoordinatorOrAbove) {
         return res.status(403).json({
-            error: "Această acțiune este disponibilă doar conducerii DIICOT (Coordonator+)."
+            error: "Această acțiune este disponibilă doar conducerii DIICOT (Coordonator+) sau contului autorizat."
         });
     }
 
@@ -3468,7 +3469,7 @@ app.get(
             Number(
                 req.session.user.rankLevel ||
                 0
-            ) >= 10;
+            ) >= 6;
 
         const isTester =
             roles.includes(
@@ -9422,7 +9423,7 @@ app.get(
                 Number(
                     req.session.user.rankLevel ||
                     0
-                ) >= 10 &&
+                ) >= 6 &&
                 !isOwnProfile;
 
 
@@ -10682,7 +10683,7 @@ app.get(
                     Number(
                         req.session.user.rankLevel ||
                         0
-                    ) >= 10,
+                    ) >= 6,
 
                 rows:
                     (
@@ -14893,7 +14894,7 @@ app.get(
             return res.json({
                 permissions: {
                     leadership:
-                        (String(req.session.user?.id || "") === "1315733546312142921" || Number(req.session.user?.rankLevel || 0) >= 6),
+                        Number(req.session.user?.rankLevel || 0) >= 6,
                     tester:
                         hasTesterAccess(req.session.user)
                 },
