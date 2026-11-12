@@ -1329,7 +1329,7 @@ function normalizeCallsign(value) {
     if (
         !Number.isInteger(number) ||
         number < 1 ||
-        number > 99
+        number > 80
     ) {
         return null;
     }
@@ -2534,15 +2534,19 @@ function mapLeaveRequest(row) {
 
 function getDocsRankForSlot(number) {
     const slot = Number(number);
+    // Conducerea D-01..D-07 rămâne neschimbată.
     if (slot === 1) return { name: "PROCUROR ȘEF", level: 9 };
     if (slot >= 2 && slot <= 3) return { name: "PROCUROR ȘEF ADJUNCT", level: 8 };
     if (slot >= 4 && slot <= 5) return { name: "PROCUROR", level: 7 };
     if (slot >= 6 && slot <= 7) return { name: "COORDONATOR", level: 6 };
-    if (slot >= 8 && slot <= 9) return { name: "COMISAR-ȘEF", level: 5 };
-    if (slot >= 10 && slot <= 12) return { name: "COMISAR", level: 4 };
-    if (slot >= 13 && slot <= 17) return { name: "INSPECTOR", level: 3 };
-    if (slot >= 18 && slot <= 22) return { name: "AGENT PRINCIPAL", level: 2 };
-    if (slot >= 23 && slot <= 33) return { name: "AGENT STAGIAR", level: 1 };
+    if (slot >= 8 && slot <= 10) return { name: "COMISAR-ȘEF", level: 5 };
+    if (slot >= 11 && slot <= 14) return { name: "COMISAR", level: 4 };
+    if (slot >= 15 && slot <= 19) return { name: "SUB COMISAR", level: 3 };
+    if (slot >= 20 && slot <= 24) return { name: "INSPECTOR PRINCIPAL", level: 2 };
+    if (slot >= 25 && slot <= 29) return { name: "SUB INSPECTOR", level: 1 };
+    if (slot >= 30 && slot <= 42) return { name: "AGENT PRINCIPAL", level: 0 };
+    if (slot >= 43 && slot <= 59) return { name: "AGENT OPERATIV", level: -1 };
+    if (slot >= 60 && slot <= 80) return { name: "AGENT STAGIAR", level: -2 };
     return { name: "", level: 0 };
 }
 
@@ -8681,10 +8685,39 @@ function mapDiscordPersonnelMember(member) {
                 ? member.roles.map(String)
                 : [];
 
-        const rank =
+        const discordRank =
             getHighestDIICOTRole(
                 roles
             );
+
+        // PERSONAL DIICOT folosește aceeași structură ca DOCS:
+        // gradul este stabilit prioritar după Call Sign-ul D-01..D-80.
+        // Rolul Discord original rămâne păstrat separat pentru administrare.
+        const displayName =
+            member.nick ||
+            user.global_name ||
+            user.username ||
+            "Necunoscut";
+
+        const callsignMatch = String(displayName).match(
+            /(?:^|\[|\s)(D\s*-\s*0?\d{1,2})(?:\]|\s|$)/i
+        );
+        const normalizedCallsign = callsignMatch
+            ? normalizeCallsign(callsignMatch[1])
+            : null;
+        const callsignNumber = normalizedCallsign
+            ? Number(normalizedCallsign.replace("D-", ""))
+            : null;
+        const docsRank = callsignNumber
+            ? getDocsRankForSlot(callsignNumber)
+            : null;
+        const rank = docsRank?.name
+            ? {
+                id: discordRank?.id || "",
+                name: docsRank.name,
+                level: docsRank.level
+            }
+            : discordRank;
 
         if (!rank) {
             return null;
@@ -8698,11 +8731,7 @@ function mapDiscordPersonnelMember(member) {
                 user.username ||
                 "Necunoscut",
 
-            displayName:
-                member.nick ||
-                user.global_name ||
-                user.username ||
-                "Necunoscut",
+            displayName,
 
             avatar:
                 discordMemberAvatar(
@@ -8716,7 +8745,10 @@ function mapDiscordPersonnelMember(member) {
                 Number(rank.level || 0),
 
             rankRoleId:
-                rank.id
+                discordRank?.id || rank.id,
+
+            callsignRank:
+                Boolean(docsRank?.name)
         };
     }
     catch (error) {
@@ -9062,36 +9094,46 @@ app.get(
                         }
                     );
 
-            const grouped =
-                DIICOT_ROLES
-                    .map(
-                        role => ({
-                            id:
-                                role.id,
+            // Grupăm Personal DIICOT după exact aceleași intervale ca DOCS.
+            // Membrii fără Call Sign valid rămân grupați după rolul Discord.
+            const personnelRankOrder = [
+                { name: "PROCUROR ȘEF DIICOT", level: 9 },
+                { name: "PROCUROR ȘEF ADJUNCT DIICOT", level: 8 },
+                { name: "PROCUROR DIICOT", level: 7 },
+                { name: "COORDONATOR DIICOT", level: 6 },
+                { name: "COMISAR-ȘEF", level: 5 },
+                { name: "COMISAR", level: 4 },
+                { name: "SUB COMISAR", level: 3 },
+                { name: "INSPECTOR PRINCIPAL", level: 2 },
+                { name: "SUB INSPECTOR", level: 1 },
+                { name: "AGENT PRINCIPAL", level: 0 },
+                { name: "AGENT OPERATIV", level: -1 },
+                { name: "AGENT STAGIAR", level: -2 }
+            ];
 
-                            name:
-                                role.name,
-
-                            level:
-                                role.level,
-
-                            members:
-                                personnel.filter(
-                                    member =>
-                                        String(
-                                            member.rankRoleId
-                                        ) ===
-                                        String(
-                                            role.id
-                                        )
-                                )
-                        })
+            const grouped = personnelRankOrder
+                .map((rank, index) => ({
+                    id: `docs-rank-${index}`,
+                    name: rank.name,
+                    level: rank.level,
+                    members: personnel.filter(member =>
+                        member.callsignRank === true &&
+                        Number(member.rankLevel) === Number(rank.level)
                     )
-                    .filter(
-                        group =>
-                            group.members.length >
-                            0
-                    );
+                }))
+                .filter(group => group.members.length > 0);
+
+            // Păstrăm la final eventualele roluri Discord care nu au Call Sign valid.
+            const knownRankNames = new Set(personnelRankOrder.map(rank => rank.name));
+            for (const role of DIICOT_ROLES) {
+                const members = personnel.filter(member =>
+                    String(member.rankRoleId) === String(role.id) &&
+                    member.callsignRank !== true
+                );
+                if (members.length) {
+                    grouped.push({ id: role.id, name: role.name, level: role.level, members });
+                }
+            }
 
             console.log(
                 `[PERSONAL DIICOT] ${personnel.length} membri găsiți.`
@@ -10306,7 +10348,7 @@ app.patch(
                 .status(400)
                 .json({
                     error:
-                        "Callsign invalid. Folosește un număr între 01 și 99."
+                        "Callsign invalid. Folosește un număr între 01 și 80."
                 });
         }
 
@@ -11582,7 +11624,7 @@ function docsSlotFromCallsign(value) {
     if (!match) return null;
 
     const number = Number(match[1]);
-    if (number < 1 || number > 33) return null;
+    if (number < 1 || number > 80) return null;
 
     return {
         number,
@@ -11616,12 +11658,13 @@ async function syncDocsInBatches(editorId, editorName) {
     for (const member of members || []) {
         const roles = Array.isArray(member.roles) ? member.roles.map(String) : [];
         const diicotRank = getHighestDIICOTRole(roles);
-        if (!diicotRank) continue;
-
         const displayName = member.nick || member.user?.global_name || member.user?.username || "";
         const match = displayName.match(/\[?\b(D-\d{1,2})\b\]?/i);
         const slot = docsSlotFromCallsign(match?.[1]);
         if (!slot || !member.user?.id) continue;
+        // Pentru noile grade D-08..D-80, callsign-ul valid este criteriul DOCS;
+        // rolurile noi pot fi adăugate separat când sunt disponibile ID-urile Discord.
+        if (!diicotRank && slot.number < 8) continue;
 
         // Callsign-ul din Discord este sursa de adevăr. Dacă două persoane au
         // același callsign, păstrăm prima și nu duplicăm persoana în DOCS.
@@ -11636,7 +11679,7 @@ async function syncDocsInBatches(editorId, editorName) {
     let moved = 0;
     let removed = 0;
 
-    for (let number = 1; number <= 33; number += 1) {
+    for (let number = 1; number <= 80; number += 1) {
         const callsign = `D-${String(number).padStart(2, "0")}`;
         const target = existingByCallsign.get(callsign) || null;
         const member = membersByCallsign.get(callsign) || null;
@@ -11747,7 +11790,7 @@ async function syncDocsInBatches(editorId, editorName) {
     }
 
     // Ștergem doar rândurile care nu mai reprezintă unul dintre sloturile
-    // D-01..D-33 (duplicate/înregistrări vechi).
+    // D-01..D-80 (duplicate/înregistrări vechi).
     const keepIds = new Set(upsertRows.map(row => String(row.id)));
     const staleIds = existingRows
         .filter(row => !keepIds.has(String(row.id)))
@@ -11769,7 +11812,7 @@ async function syncDocsInBatches(editorId, editorName) {
         assigned,
         moved,
         removed,
-        totalSlots: 99,
+        totalSlots: 80,
         message: `Sincronizare completă: ${assigned} membri activi, ${moved} mutați după callsign/UP, ${removed} eliminați din sloturile DIICOT.`
     };
 }
@@ -11879,7 +11922,7 @@ app.post(
 
                 if (
                     number < 1 ||
-                    number > 99
+                    number > 80
                 ) {
                     return null;
                 }
@@ -11894,7 +11937,7 @@ app.post(
 
 
             // --------------------------------------------------
-            // 2. Creăm toate sloturile D-01 ... D-33 lipsă.
+            // 2. Creăm toate sloturile D-01 ... D-80 lipsă.
             // --------------------------------------------------
 
             const existingCallsigns =
@@ -11914,7 +11957,7 @@ app.post(
 
             for (
                 let number = 1;
-                number <= 33;
+                number <= 80;
                 number++
             ) {
 
@@ -12052,7 +12095,7 @@ app.post(
                 [];
 
 
-            // Orice rând fără callsign valid este pus după D-33.
+            // Orice rând fără callsign valid este pus după D-80.
             const invalidPositionRows =
                 rows.filter(
                     row =>
@@ -12089,7 +12132,7 @@ app.post(
 
 
             // --------------------------------------------------
-            // 2.1 Actualizăm gradul fiecărui slot D-01 ... D-33
+            // 2.1 Actualizăm gradul fiecărui slot D-01 ... D-80
             // după schema fixă DOCS.
             // --------------------------------------------------
 
@@ -12500,7 +12543,7 @@ app.post(
                 merged,
 
                 totalSlots:
-                    99
+                    80
             });
 
         }
@@ -13210,7 +13253,7 @@ app.patch(
 
         if (!requestId || !callsign) {
             return res.status(400).json({
-                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-33."
+                error: "Cererea sau callsign-ul este invalid. Folosește D-01 până la D-80."
             });
         }
 
