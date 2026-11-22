@@ -17704,17 +17704,19 @@ const query =
             const match = String(callsign || "").trim().toUpperCase().match(/^D-(\d{1,2})$/);
             if (!match) return "";
             const slot = Number(match[1]);
-            if (slot === 1) return "PROCUROR ȘEF";
-            if (slot >= 2 && slot <= 3) return "PROCUROR ȘEF ADJUNCT";
-            if (slot >= 4 && slot <= 5) return "PROCUROR";
-            if (slot >= 6 && slot <= 7) return "COORDONATOR";
-            if (slot >= 8 && slot <= 9) return "COMISAR ȘEF";
-            if (slot >= 10 && slot <= 13) return "COMISAR";
-            if (slot >= 14 && slot <= 17) return "INSPECTOR PRINCIPAL";
-            if (slot >= 18 && slot <= 22) return "INSPECTOR";
-            if (slot >= 23 && slot <= 29) return "AGENT PRINCIPAL";
-            if (slot >= 30 && slot <= 40) return "AGENT STAGIAR";
-            return "";
+            const ranksBySlot = {
+                1: "PROCUROR ȘEF",
+                2: "PROCUROR ȘEF ADJUNCT", 3: "PROCUROR ȘEF ADJUNCT",
+                4: "PROCUROR", 5: "PROCUROR",
+                6: "COORDONATOR", 7: "COORDONATOR",
+                8: "COMISAR ȘEF", 9: "COMISAR ȘEF",
+                10: "COMISAR", 11: "COMISAR", 12: "COMISAR", 13: "COMISAR",
+                14: "INSPECTOR PRINCIPAL", 15: "INSPECTOR PRINCIPAL", 16: "INSPECTOR PRINCIPAL", 17: "INSPECTOR PRINCIPAL",
+                18: "INSPECTOR", 19: "INSPECTOR", 20: "INSPECTOR", 21: "INSPECTOR", 22: "INSPECTOR",
+                23: "AGENT PRINCIPAL", 24: "AGENT PRINCIPAL", 25: "AGENT PRINCIPAL", 26: "AGENT PRINCIPAL", 27: "AGENT PRINCIPAL", 28: "AGENT PRINCIPAL", 29: "AGENT PRINCIPAL",
+                30: "AGENT STAGIAR", 31: "AGENT STAGIAR", 32: "AGENT STAGIAR", 33: "AGENT STAGIAR", 34: "AGENT STAGIAR", 35: "AGENT STAGIAR", 36: "AGENT STAGIAR", 37: "AGENT STAGIAR", 38: "AGENT STAGIAR", 39: "AGENT STAGIAR", 40: "AGENT STAGIAR"
+            };
+            return ranksBySlot[slot] || "";
         };
 
         // Registrul afișează exclusiv cele 40 de locuri active.
