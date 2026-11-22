@@ -11335,6 +11335,15 @@ hr{border-color:rgba(224,75,87,.14)!important}
 </style>
 
 <link rel="stylesheet" href="/diicot-navy-gold-override.css?v=1">
+
+<style id="diicot-docs-rank-layout-fix">
+#docs .diicot-rank-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;}
+#docs .diicot-rank-card{display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:68px;padding:12px 13px;border:1px solid rgba(143,180,220,.13);border-radius:10px;background:linear-gradient(145deg,rgba(12,27,44,.78),rgba(5,13,23,.72));}
+#docs .diicot-rank-card span{color:#8296ad;font-size:9px;font-weight:800;letter-spacing:.045em;line-height:1.35;}
+#docs .diicot-rank-card strong{color:#f2c45a;font-size:12px;font-weight:900;white-space:nowrap;}
+@media(max-width:1100px){#docs .diicot-rank-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:650px){#docs .diicot-rank-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+</style>
 </head>
 
 
@@ -13153,17 +13162,17 @@ hr{border-color:rgba(224,75,87,.14)!important}
                     <div class="panel-heading" style="padding:0 0 12px;min-height:auto;">
                         STRUCTURA GRADE ȘI INDICATIVE DIICOT • D-01 — D-40
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;">
-                        <div class="system-row"><span>PROCUROR ȘEF</span><strong>D-01</strong></div>
-                        <div class="system-row"><span>PROCUROR ȘEF ADJUNCT</span><strong>D-02 – D-03</strong></div>
-                        <div class="system-row"><span>PROCUROR</span><strong>D-04 – D-05</strong></div>
-                        <div class="system-row"><span>COORDONATOR</span><strong>D-06 – D-07</strong></div>
-                        <div class="system-row"><span>COMISAR ȘEF</span><strong>D-08 – D-09</strong></div>
-                        <div class="system-row"><span>COMISAR</span><strong>D-10 – D-13</strong></div>
-                        <div class="system-row"><span>INSPECTOR PRINCIPAL</span><strong>D-14 – D-17</strong></div>
-                        <div class="system-row"><span>INSPECTOR</span><strong>D-18 – D-22</strong></div>
-                        <div class="system-row"><span>AGENT PRINCIPAL</span><strong>D-23 – D-29</strong></div>
-                        <div class="system-row"><span>AGENT STAGIAR</span><strong>D-30 – D-40</strong></div>
+                    <div class="diicot-rank-grid">
+                        <div class="diicot-rank-card"><span>PROCUROR ȘEF</span><strong>D-01</strong></div>
+                        <div class="diicot-rank-card"><span>PROCUROR ȘEF ADJUNCT</span><strong>D-02 – D-03</strong></div>
+                        <div class="diicot-rank-card"><span>PROCUROR</span><strong>D-04 – D-05</strong></div>
+                        <div class="diicot-rank-card"><span>COORDONATOR</span><strong>D-06 – D-07</strong></div>
+                        <div class="diicot-rank-card"><span>COMISAR ȘEF</span><strong>D-08 – D-09</strong></div>
+                        <div class="diicot-rank-card"><span>COMISAR</span><strong>D-10 – D-13</strong></div>
+                        <div class="diicot-rank-card"><span>INSPECTOR PRINCIPAL</span><strong>D-14 – D-17</strong></div>
+                        <div class="diicot-rank-card"><span>INSPECTOR</span><strong>D-18 – D-22</strong></div>
+                        <div class="diicot-rank-card"><span>AGENT PRINCIPAL</span><strong>D-23 – D-29</strong></div>
+                        <div class="diicot-rank-card"><span>AGENT STAGIAR</span><strong>D-30 – D-40</strong></div>
                     </div>
                 </div>
 
@@ -17710,7 +17719,7 @@ const query =
         // Afișăm registrul activ D-01..D-40. Înregistrările istorice D-41..D-80
         // rămân păstrate în baza de date, dar nu intră în noua structură.
         const activeDocsRows = docsRows.filter(row => {
-            const match = String(row?.callsign || "").trim().toUpperCase().match(/^D-(\\d{1,2})$/);
+            const match = String(row?.callsign || "").trim().toUpperCase().match(/^D-(\d{1,2})$/);
             return !match || Number(match[1]) <= 40;
         });
 
