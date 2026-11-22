@@ -13158,24 +13158,6 @@ hr{border-color:rgba(224,75,87,.14)!important}
                     <div class="docs-render-stat"><span>LIBERE</span><strong id="docs-stat-free">40</strong><small>disponibile</small></div>
                 </div>
 
-                <div class="dashboard-panel" style="margin:0 0 16px;padding:16px 18px;">
-                    <div class="panel-heading" style="padding:0 0 12px;min-height:auto;">
-                        STRUCTURA GRADE ȘI INDICATIVE DIICOT • D-01 — D-40
-                    </div>
-                    <div class="diicot-rank-grid">
-                        <div class="diicot-rank-card"><span>PROCUROR ȘEF</span><strong>D-01</strong></div>
-                        <div class="diicot-rank-card"><span>PROCUROR ȘEF ADJUNCT</span><strong>D-02 – D-03</strong></div>
-                        <div class="diicot-rank-card"><span>PROCUROR</span><strong>D-04 – D-05</strong></div>
-                        <div class="diicot-rank-card"><span>COORDONATOR</span><strong>D-06 – D-07</strong></div>
-                        <div class="diicot-rank-card"><span>COMISAR ȘEF</span><strong>D-08 – D-09</strong></div>
-                        <div class="diicot-rank-card"><span>COMISAR</span><strong>D-10 – D-13</strong></div>
-                        <div class="diicot-rank-card"><span>INSPECTOR PRINCIPAL</span><strong>D-14 – D-17</strong></div>
-                        <div class="diicot-rank-card"><span>INSPECTOR</span><strong>D-18 – D-22</strong></div>
-                        <div class="diicot-rank-card"><span>AGENT PRINCIPAL</span><strong>D-23 – D-29</strong></div>
-                        <div class="diicot-rank-card"><span>AGENT STAGIAR</span><strong>D-30 – D-40</strong></div>
-                    </div>
-                </div>
-
                 <div class="docs-toolbar">
 
                     <div class="docs-toolbar-left">
@@ -17718,10 +17700,35 @@ const query =
 
         // Afișăm registrul activ D-01..D-40. Înregistrările istorice D-41..D-80
         // rămân păstrate în baza de date, dar nu intră în noua structură.
-        const activeDocsRows = docsRows.filter(row => {
-            const match = String(row?.callsign || "").trim().toUpperCase().match(/^D-(\d{1,2})$/);
-            return !match || Number(match[1]) <= 40;
-        });
+        const getRankForDocsCallsign = callsign => {
+            const match = String(callsign || "").trim().toUpperCase().match(/^D-(\d{1,2})$/);
+            if (!match) return "";
+            const slot = Number(match[1]);
+            if (slot === 1) return "PROCUROR ȘEF";
+            if (slot >= 2 && slot <= 3) return "PROCUROR ȘEF ADJUNCT";
+            if (slot >= 4 && slot <= 5) return "PROCUROR";
+            if (slot >= 6 && slot <= 7) return "COORDONATOR";
+            if (slot >= 8 && slot <= 9) return "COMISAR ȘEF";
+            if (slot >= 10 && slot <= 13) return "COMISAR";
+            if (slot >= 14 && slot <= 17) return "INSPECTOR PRINCIPAL";
+            if (slot >= 18 && slot <= 22) return "INSPECTOR";
+            if (slot >= 23 && slot <= 29) return "AGENT PRINCIPAL";
+            if (slot >= 30 && slot <= 40) return "AGENT STAGIAR";
+            return "";
+        };
+
+        // Registrul afișează exclusiv cele 40 de locuri active.
+        // Gradul fiecărui rând este stabilit automat după intervalul callsign-ului.
+        const activeDocsRows = docsRows
+            .filter(row => {
+                const match = String(row?.callsign || "").trim().toUpperCase().match(/^D-(\d{1,2})$/);
+                return Boolean(match) && Number(match[1]) >= 1 && Number(match[1]) <= 40;
+            })
+            .map(row => ({
+                ...row,
+                rank: getRankForDocsCallsign(row.callsign)
+            }))
+            .sort((a, b) => Number(String(a.callsign).match(/\d+/)?.[0] || 0) - Number(String(b.callsign).match(/\d+/)?.[0] || 0));
 
         const filtered =
             activeDocsRows.filter(
